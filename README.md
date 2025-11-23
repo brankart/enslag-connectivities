@@ -35,6 +35,9 @@ In the BRIDGES-AVATAR workframe, we take the SouthWest Indian Ocean (SWIO) as a 
 
 ## SOURCES 
 
-
++ **getvars.py**: extract specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs. 
++ **runseq_swiose.py:** compute lagrangian trajectories with ocean parcels, using SWIOSE CROCO outputs.
++ **visu_swiose.py:** produce figures to visualize *runseq_swiose.py* outputs.
++ **tools.py:** a set of functions to perform a wide range of tasks involved in this work, such as particle generation, and specific visualization.
 
 
