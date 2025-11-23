@@ -43,5 +43,5 @@ In the BRIDGES-AVATAR workframe, we take the SouthWest Indian Ocean (SWIO) as a 
   
 + **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform specific tasks involved in this work, such as particle generation, and specific visualization.
   
-+ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runseq_swiose.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the slurm job manager (here Adastra, operated by the CINES).
++ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runseq_swiose.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
 
