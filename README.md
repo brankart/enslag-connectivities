@@ -35,9 +35,13 @@ In the BRIDGES-AVATAR workframe, we take the SouthWest Indian Ocean (SWIO) as a 
 
 ## SOURCES 
 
-+ **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extract specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs. 
-+ **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** compute lagrangian trajectories with ocean parcels, using SWIOSE CROCO outputs.
-+ **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produce figures to visualize *runseq_swiose.py* outputs.
-+ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform a wide range of tasks involved in this work, such as particle generation, and specific visualization.
-
++ **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
+  
++ **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO outputs.
+  
++ **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produces figures to visualize *runseq_swiose.py* outputs.
+  
++ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform specific tasks involved in this work, such as particle generation, and specific visualization.
+  
++ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runseq_swiose.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the slurm job manager (here Adastra, operated by the CINES).
 
