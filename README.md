@@ -4,7 +4,7 @@ This preliminary work aims at providing useful tests on lagrangian modelling too
 
 <img src="figures_SWIOSE/ini/Glorioso/z1000/1part/traj_1part_FULLENS_Glorioso_z1000_2019_ini_dt300_colortime_map_bathy.png" alt="drawing" width="600"/>
 
-**Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019 (30 particles on a 30-member ensemble simulation, one particle on each member.)**
+**Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019, depth 1000m (30 particles on a 30-member ensemble simulation, one particle on each member.)**
 
 
 
