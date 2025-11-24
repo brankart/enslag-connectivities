@@ -18,7 +18,7 @@ In the BRIDGES-AVATAR workframe, we take the SouthWest Indian Ocean (SWIO) as a 
 
 ### OceanParcels
 
-  There is a wide offer of lagrangian free, open-source software, but we decided to use the [OceanParcels](https://parcels-code.org/) simulator. The main reason is that it is distributed as a free python module, which makes it very easy to install, set up and customize for any personnal experiment. One inconveninent might be its slower computational time when compared to other simulators, due to the language architecture; However it is easy to perform customized, parallel computing on clusters with it. Yu can create your own parcels python environment by following [this tutorial.](https://docs.parcels-code.org/en/latest/installation.html).
+  There is a wide offer of lagrangian free, open-source software, but we decided to use the [OceanParcels](https://parcels-code.org/) simulator. The main reason is that it is distributed as a free python module, which makes it very easy to install, set up and customize for any personnal experiment. One inconveninent might be its slower computational time when compared to other simulators, due to the language architecture; However it is easy to make it perform parallel and custom computing on clusters. You can create your own parcels python environment by following [this tutorial.](https://docs.parcels-code.org/en/latest/installation.html).
 
 
 ### Other useful tools
