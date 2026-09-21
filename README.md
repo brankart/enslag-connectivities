@@ -1,4 +1,4 @@
-# BRIDGES-AVATAR-lagrangian: An introduction to Lagrangian post-modelling and processing
+# BRIDGES-AVATAR-lagrangian: A simple framework for ensemble lagrangian connectivity modelling and postprocessing
 
 This preliminary work aims at providing useful tests on lagrangian modelling tools that take ocean circulation runs as inputs, within the [BRIDGES-AVATAR](https://www.bridges-wio.com/fr/projet/pc-3-avatar/) research project workframe. The idea is to provide a "starter" set of tools to explore the outputs of chosen simulations, and get used to the associated Lagrangian post-pocessing methods.
 
