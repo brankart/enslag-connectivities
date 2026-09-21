@@ -2,10 +2,13 @@
 
 This preliminary work aims at providing useful tests on lagrangian modelling tools that take ocean circulation runs as inputs, within the [BRIDGES-AVATAR](https://www.bridges-wio.com/fr/projet/pc-3-avatar/) research project workframe. The idea is to provide a "starter" set of tools to explore the outputs of chosen simulations, and get used to the associated Lagrangian post-pocessing methods.
 
-<img src="figures_SWIOSE/ini/Glorioso/z1000/1part/traj_1part_FULLENS_Glorioso_z1000_2019_ini_dt300_colortime_map_bathy.png" alt="drawing" width="600"/>
+<img src="figures/ini/Glorioso/z1000/1part/traj_1part_FULLENS_Glorioso_z1000_2019_ini_dt300_colortime_map_bathy.png" alt="drawing" width="600"/>
 
-**Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019, depth 1000m (30 particles on a 30-member ensemble simulation, one particle on each member.)**
+**Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019, depth 1000m (30 particles on a 30-member ensemble simulation, one particle on each member).**
 
+<img src="figures/ini/box_particle_counts_total.png" alt="drawing" width="600"/>
+
+**Fig.1: Example of a particle density map made from a parcels simulation on a CROCO ensemble run.**
 
 
 ## CONTEXT, BACKGROUND AND OBJECTIVES

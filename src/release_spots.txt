@@ -1,0 +1,25 @@
+# SWIO EXPERIMENTS RELEASE SPOTS 
+#
+# Northern Mozambique Channel (Comoros / N Madagascar inflow zone)
+51.00 -10.00  # Eastern Glorioso Archipelago
+43.20 -11.70  # Comoros - Grande Comore
+45.50 -13.00  # Mayotte MPA
+49.30 -12.00  # Cap d'Ambre (Northern Madagascar)
+40.60 -11.20  # Cabo Delgado (Northern Mozambique coast)
+#
+# West Madagascar Shelf
+49.30 -12.23  # Nosy Hara lagoon (Cap d'Ambre)
+46.70 -15.30  # Mahajanga region
+44.30 -20.30  # Morondava shelf
+43.70 -23.50  # Toliara reefs
+#
+# Mozambique Shelf (Primeiras & Segundas → Bazaruto)
+40.50 -15.00  # Primeiras & Segundas
+39.80 -18.00  # Central Mozambique shelf
+35.50 -21.80  # Bazaruto Archipelago
+#
+# Tanzania
+39.50 -08.00  # Mafia Island world nature reserve
+
+# Mascareignes & open SWIO
+55.25 -21.25  # La Reunion western shelf
