@@ -3,11 +3,9 @@
 This preliminary work aims at providing useful tests on lagrangian modelling tools that take ocean circulation runs as inputs, within the [BRIDGES-AVATAR](https://www.bridges-wio.com/fr/projet/pc-3-avatar/) research project workframe. The idea is to provide a "starter" set of tools to explore the outputs of chosen simulations, and get used to the associated Lagrangian post-pocessing methods.
 
 <img src="figures/ini/Glorioso/z1000/1part/traj_1part_FULLENS_Glorioso_z1000_2019_ini_dt300_colortime_map_bathy.png" alt="drawing" width="600"/>
-
 **Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019, depth 1000m (30 particles on a 30-member ensemble simulation, one particle on each member).**
 
 <img src="figures/ini/box_particle_counts_total.png" alt="drawing" width="600"/>
-
 **Fig.1: Example of a particle density map made from a parcels simulation on a CROCO ensemble run.**
 
 
@@ -18,34 +16,33 @@ In the BRIDGES-AVATAR workframe, we take the SouthWest Indian Ocean (SWIO) as a 
 
 ## INSTALLATION INSTRUCTIONS
 
-
 ### OceanParcels
 
-  There is a wide offer of lagrangian free, open-source software, but we decided to use the [OceanParcels](https://parcels-code.org/) simulator. The main reason is that it is distributed as a free python module, which makes it very easy to install, set up and customize for any personnal experiment. One inconveninent might be its slower computational time when compared to other simulators, due to the language architecture; However it is easy to make it perform parallel and custom computing on clusters. You can create your own parcels python environment by following [this tutorial.](https://docs.parcels-code.org/en/latest/installation.html).
+There is a wide offer of lagrangian free, open-source software, but we chose to use the [OceanParcels](https://parcels-code.org/) simulator. The main reason is that it is distributed as a free python module, which makes it very easy to install, set up and customize for any personnal experiment. One inconvenient might be its slower computational time when compared to other simulators, due to the language architecture; However it is quite easy to make it perform parallel and custom computing on clusters. You can create your own parcels installation by following [this tutorial.](https://docs.parcels-code.org/en/latest/installation.html).
+
+### Programming environment
+
 
 
 ### Other useful tools
 
-+ **[Install VirtualFleet:](https://github.com/euroargodev/VirtualFleet)** a free, open-source set of python classes and routines, developed on top of OceanParcels, to mimick the behavior and deployment strategies of ARGO floats.
++ **[VirtualFleet:](https://github.com/euroargodev/VirtualFleet)** a free, open-source set of python classes and routines, developed on top of OceanParcels, to mimick the behavior and deployment strategies of ARGO floats.
 
-+ **[Install zarr2netcdf:](https://github.com/daanreijnders/zarr2netcdf)** a free, open-source python protocol to convert .zarr data stores (used by default in oceanparcels and its derivatives) to netcdf files. This can be very convenient for data compression, long-term storage and transfer.
-
-
-### Quickstart with a few basic tools
-
-### Cruise reproduction or planning
++ **[zarr2netcdf:](https://github.com/daanreijnders/zarr2netcdf)** a free, open-source python protocol to convert .zarr data stores (used by default in parcels and its derivatives) to netcdf files. This can be very convenient for data compression, long-term storage and transfer.
 
 
+## USER GUIDE 
 
-## SOURCES 
+### Sources
 
 + **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
   
-+ **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO outputs.
++ **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO ensemble outputs.
+
++ **[runpar_swiose_opt.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runpar_swiose_opt.py)** computes lagrangian trajectories with ocean parcels and an MPI parallelization, using SWIOSE CROCO ensemble outputs.
   
 + **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produces figures to visualize *runseq_swiose.py* outputs.
-  
-+ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform specific tasks involved in this work, such as particle generation, and specific visualization.
-  
-+ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runseq_swiose.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
+    
++ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
 
++ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform specific tasks involved in this work, such as particle generation, and specific visualization.
