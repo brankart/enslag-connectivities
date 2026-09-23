@@ -49,4 +49,4 @@ There is a wide offer of lagrangian free, open-source software, but we chose to 
     
 + **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
 
-+ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform specific tasks involved in this work, such as particle generation, and specific visualization.
++ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform some specific tasks involved in this work, such as particle generation, and specific visualization.
