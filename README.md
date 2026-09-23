@@ -22,9 +22,14 @@ There is a wide offer of lagrangian free, open-source software, but we chose to 
 
 ### Programming environment
 
+To install the toolset on your personnal space, just follow these steps :
 
+1) unzip the the repo in your destination directory,
+2) execute create_parcels_venv.sh,
+3) execute build_craympi_parcels.sh,
+4) install the plothon environment with conda, micromamba or venv with env/plothon.yml configuration file.
 
-### Other useful tools
+### Other optionnal (but useful) tools
 
 + **[VirtualFleet:](https://github.com/euroargodev/VirtualFleet)** a free, open-source set of python classes and routines, developed on top of OceanParcels, to mimick the behavior and deployment strategies of ARGO floats.
 
