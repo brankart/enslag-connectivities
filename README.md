@@ -42,6 +42,10 @@ There is a wide offer of lagrangian free, open-source software, but we chose to 
 + **[runpar_swiose_opt.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runpar_swiose_opt.py)** computes lagrangian trajectories with ocean parcels and an MPI parallelization, using SWIOSE CROCO ensemble outputs.
   
 + **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produces figures to visualize *runseq_swiose.py* outputs.
+
++ **[count_particles_per_box.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/count_particles_per_box.py)** produces a bunch of connectivity metrics from lagrangian trajectories (particle density grid, in-degree matrix, betweenness) and saves it to a netCDF file.
+
++ **[plot_box_particle_counts.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_box_particle_counts.py)** produces figures to visualize *count_particles_per_box.py* outputs.
     
 + **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
 
