@@ -44,7 +44,7 @@ The post-processing scripts should run properly on any machine (local or distant
 ### Other optionnal (but useful) tools
 
 + **[VirtualFleet:](https://github.com/euroargodev/VirtualFleet)** a free, open-source set of python classes and routines, developed on top of OceanParcels, to mimick the behavior and deployment strategies of ARGO floats.
-+ **[zarr2netcdf:](https://github.com/daanreijnders/zarr2netcdf)** a free, open-source python protocol to convert .zarr data stores (used by default in parcels and its derivatives) to netcdf files. This can be very convenient for data compression, long-term storage and transfer.
++ **[zarr2netcdf:](https://github.com/daanreijnders/zarr2netcdf)** a free, open-source python protocol to convert .zarr data stores (used by default in parcels and its derivatives) to netcdf files. This can be very convenient for data compression, long-term storage, transfer and sharing.
 
 
 ## USER GUIDE 
