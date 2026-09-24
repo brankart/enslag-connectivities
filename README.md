@@ -54,11 +54,11 @@ The post-processing scripts should run properly on any machine (local or distant
 
 To start using the toolset, go to the src directory. You should find the following files :
 
-INPUT DATA SHAPING
+**INPUT SHAPING**
 
 + **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
   
-LAGRANGIAN SIMULATION
+**LAGRANGIAN SIMULATION**
 
 + **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO ensemble outputs.
 
@@ -66,18 +66,18 @@ LAGRANGIAN SIMULATION
 
 + **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
   
-LAGRANGIAN VISUALIZATION
+**LAGRANGIAN VISUALIZATION**
 
 + **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produces figures to visualize *runseq_swiose.py* outputs.
 
-CONNECTIVITY PROCESSING
+**CONNECTIVITY PROCESSING**
 
 + **[count_particles_per_box.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/count_particles_per_box.py)** produces a bunch of connectivity metrics from lagrangian trajectories (particle density grid, in-degree matrix, betweenness) and saves it to a netCDF file.
 
-CONNECTIVITY POSTPROCESSING
+**CONNECTIVITY POSTPROCESSING**
 
 + **[plot_box_particle_counts.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_box_particle_counts.py)** produces figures to visualize *count_particles_per_box.py* outputs.
     
-ROUTINES
+**ROUTINES**
 
 + **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform some specific tasks involved in this work, such as particle generation, and specific visualization.
