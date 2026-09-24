@@ -24,9 +24,9 @@ There is a wide offer of lagrangian free, open-source software, but we chose to 
 
 To perform our Lagrangian simulations, we used the cluster Adastra, managed by CINES (Centre Informatique National de l'Enseignement Supérieur). Due to compatibility reasons, we used 2 different python virtual environments :
 
- - The runlag venv environment for the Lagrangian computing,
- - The plothon conda environment for the connectivity post-processing.
- - 
+ - The **runlag** venv environment for the Lagrangian computing,
+ - The **plothon** conda environment for the connectivity post-processing.
+
 To install the whole toolset on your cluster, just follow these steps :
 
 1) unzip the the repo in your destination directory and go to the env directory,
