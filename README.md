@@ -44,7 +44,6 @@ The post-processing scripts should run properly on any machine (local or distant
 ### Other optionnal (but useful) tools
 
 + **[VirtualFleet:](https://github.com/euroargodev/VirtualFleet)** a free, open-source set of python classes and routines, developed on top of OceanParcels, to mimick the behavior and deployment strategies of ARGO floats.
-
 + **[zarr2netcdf:](https://github.com/daanreijnders/zarr2netcdf)** a free, open-source python protocol to convert .zarr data stores (used by default in parcels and its derivatives) to netcdf files. This can be very convenient for data compression, long-term storage and transfer.
 
 
@@ -61,9 +60,7 @@ To start using the toolset, go to the src directory. You should find the followi
 **LAGRANGIAN SIMULATION**
 
 + **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO ensemble outputs.
-
 + **[runpar_swiose_opt.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runpar_swiose_opt.py)** computes lagrangian trajectories with ocean parcels and an MPI parallelization, using SWIOSE CROCO ensemble outputs.
-
 + **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
   
 **LAGRANGIAN VISUALIZATION**
