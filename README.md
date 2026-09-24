@@ -6,7 +6,7 @@ This preliminary work aims at providing useful tests on lagrangian modelling too
 **Fig.1: Example of particle drifting from the Glorioso archipelago, starting on Jan 1st 2019, depth 1000m (30 particles on a 30-member ensemble simulation, one particle on each member).**
 
 <img src="figures/ini/box_particle_counts_total.png" alt="drawing" width="600"/>
-**Fig.1: Example of a particle density map made from a parcels simulation on a CROCO ensemble run.**
+**Fig.2: Example of a particle density map made from a parcels simulation on a CROCO ensemble run.**
 
 
 ## CONTEXT, BACKGROUND AND OBJECTIVES
