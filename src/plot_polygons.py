@@ -21,9 +21,9 @@ from shapely.ops import unary_union
 # Configuration
 # -----------------------------
 
-DATA_DIRS = [Path("../WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_0"),
-    	     Path("../WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_1"),
-             Path("../WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_2")]
+DATA_DIRS = [Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_0"),
+    	     Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_1"),
+             Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_2")]
 
 SHAPEFILES = [DATA_DIRS[0] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
     	      DATA_DIRS[1] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
@@ -39,7 +39,7 @@ INDIAN_OCEAN_BOUNDS = {"min_lon": 30.0,
 SAVEDIR = "../output"
 file_MPA_SWIO = "MPA_SWIO_mask.nc"
 
-SPOTS_FILE = "release_spots.txt"
+SPOTS_FILE = "../input/release_spots.txt"
 
 
 # -----------------------------
