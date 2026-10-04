@@ -51,12 +51,12 @@ except ImportError:
 # USER PARAMETERS
 # ================================================================
 
-PATH_ABS = '/lus/scratch/CT1/c1601279/SHARED/debug_parcels'
+PATH_ABS = 'your_absolute_path_to_enslag_connectivities'
 INPUT_NC = os.path.join(PATH_ABS, "output/box_particle_counts.nc")
 INPUT_LONG_CSV = os.path.join(PATH_ABS, "output/box_passages_long.csv")
-SPOTS_FILE = os.path.join(PATH_ABS, "release_spots.txt")
+SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
 
-OUTPUT_DIR = "figures"
+OUTPUT_DIR = os.path.join(PATH_ABS, "figures")
 
 PLOT_TOTAL = True            # (no-flags fallback) plot the all-members-combined map
 PLOT_PER_MEMBER = False      # (no-flags fallback) also plot one map per ensemble member
