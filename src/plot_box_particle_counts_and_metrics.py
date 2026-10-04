@@ -56,7 +56,7 @@ INPUT_NC = os.path.join(PATH_ABS, "output/box_particle_counts.nc")
 INPUT_LONG_CSV = os.path.join(PATH_ABS, "output/box_passages_long.csv")
 SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
 
-OUTPUT_DIR = os.path.join(PATH_ABS, "figures")
+OUTPUT_DIR = os.path.join(PATH_ABS, "figures/ini")
 
 PLOT_TOTAL = True            # (no-flags fallback) plot the all-members-combined map
 PLOT_PER_MEMBER = False      # (no-flags fallback) also plot one map per ensemble member
