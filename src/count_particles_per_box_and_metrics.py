@@ -76,10 +76,6 @@
 #                                      -log(product of probabilities)
 #                                      along the route).
 #
-# NEW DEPENDENCIES: this part requires scipy (cKDTree, for fast
-# radius search) and networkx (for betweenness centrality). Neither
-# was needed by the rest of the script before.
-#
 # COMMAND-LINE OPTIONS
 # ----------------------------------------------------------------
 #   --mesh SIZE_KM     override BOX_SIZE_KM below, e.g. --mesh 25
