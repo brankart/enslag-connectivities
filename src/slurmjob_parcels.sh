@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --account=c1601279
-#SBATCH --job-name="runpar_ini_test"
+#SBATCH --account={your_account}
+#SBATCH --job-name="runparcels_ini"
 #SBATCH -e ../jobs/parcels_swiose.error%j
 #SBATCH -o ../jobs/parcels_swiose.output%j
 #SBATCH --constraint=GENOA
 #SBATCH --nodes=1
-#SBATCH --exclusive                              
+#SBATCH --exclusive # exclusie or shared mode                            
 #SBATCH --time=00:10:00
 
 module purge
@@ -29,5 +29,5 @@ echo "Current working directory: $(pwd)"
 
 # srun --ntasks=1 python /lus/scratch/CT1/c1601279/tbellayer/connectivities/src/runpar_ini_opt.py
 
-srun --ntasks-per-node=1 --cpus-per-task=1 --threads-per-core=1 -- ${WORKDIR}/parcels/bin/python3 runpar_ini_opt.py
+srun --ntasks-per-node={} --cpus-per-task=1-{} --threads-per-core={} -- ${WORKDIR}/parcels/bin/python3 runpar_ini_opt.py
 
