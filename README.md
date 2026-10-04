@@ -56,7 +56,7 @@ To start using the toolset, go to the src directory. You should find the followi
 **INPUT SHAPING**
 
 + **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
-+ **[plot_polygons.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_polygons.py)** retrieves GIS vector geographic data (e.g. marine protected areas, coral reefs) from the UNEP online catalogue and visualizes them along with potential spawning sites. **!!! NB:** you need to [download the UNEP data yourself first](https://wesr.unep.org/data-catalogue) to run this script !
++ **[plot_polygons.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_polygons.py)** retrieves GIS vector geographic data (e.g. marine protected areas, coral reefs) from the UNEP online catalogue and visualizes them along with potential spawning sites. **!!! NB:** in order to run this script, you need to [download the UNEP data yourself first](https://wesr.unep.org/data-catalogue) to the input directory.
   
 **LAGRANGIAN SIMULATION**
 
