@@ -73,14 +73,14 @@ swio_dataset_folder = f'/lus/store/CT1/c1601279/lweiss/run_croco/SWIOSE_dev/run_
 fname = [f"{idx:03d}swiose_avg.nc" for idx in sample]
 file = [os.path.join(swio_dataset_folder, f) for f in fname]
 
-file_bathy_bin = f"output/{ens_id}/bathy.zarr"
-file_bathy_fig = f"figures/{ens_id}/bathy.png"
-file_ssh_bin = [f"output/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.zarr" for idx in sample]
-file_ssh_fig = [f"figures/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.png" for idx in sample]
-file_ssh_multi_fig = f"figures/{ens_id}/modelvars/ssh/ssh_multi_{year}_{ens_id}.png"
+file_bathy_bin = f"../output/{ens_id}/bathy.zarr"
+file_bathy_fig = f"../figures/{ens_id}/bathy.png"
+file_ssh_bin = [f"../output/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.zarr" for idx in sample]
+file_ssh_fig = [f"../figures/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.png" for idx in sample]
+file_ssh_multi_fig = f"../figures/{ens_id}/modelvars/ssh/ssh_multi_{year}_{ens_id}.png"
 
-dir_bin = f"output/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
-dir_fig = f"figures/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
+dir_bin = f"../output/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
+dir_fig = f"../figures/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
 
 file_ensmean_bin = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.zarr"
 file_ensmean_fig = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.png"
