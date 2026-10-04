@@ -114,7 +114,7 @@ size = comm.Get_size()
 # USER PARAMETERS
 # ================================================================
 
-PATH_ABS = '/lus/scratch/CT1/c1601279/SHARED/debug_parcels'
+PATH_ABS = 'your_path_to_enslag_connectivities'
 TRAJ_DIR = os.path.join(PATH_ABS, "output/ini")
 TRAJ_PATTERN = "traj_member_*.zarr"
 SPOTS_FILE = os.path.join(PATH_ABS, "release_spots.txt")
