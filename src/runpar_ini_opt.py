@@ -31,10 +31,10 @@ GAUSSIAN_STD_DEG = 0.05  # standard deviation of the Gaussian cloud in degrees (
 DT = 900
 OUTPUT_DT = timedelta(days=1)
 
-PATH_ABS = '/lus/scratch/CT1/c1601279/SHARED/debug_parcels'
-ENSEMBLE_DIR = os.path.join("/lus/scratch/CT1/c1601279/tbellayer/SWIOSE_dev/run_swio2_stoens30_2019_ini/")
+PATH_ABS = 'your_absolute_path_to_enslag_connectivities' 
+ENSEMBLE_DIR = 'your_path_to_ensemble_data'
 OUTPUT_DIR = os.path.join(PATH_ABS, "output/ini")
-SPOTS_FILE = os.path.join(PATH_ABS, "release_spots.txt")
+SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
 FILE_PATTERN = "{:03d}swiose_avg.nc"
 
 
@@ -70,7 +70,6 @@ def DeleteParticle(particle, fieldset, time):
 # ================================================================
  
 def load_release_points():
- 
     data = np.loadtxt(SPOTS_FILE, comments='#')
     lon = data[:, 0]
     lat = data[:, 1]
