@@ -1,7 +1,8 @@
-# file: src/main.py
+# file: src/plot_polygons.py
 
 import os
 import errno
+import argparse
 from pathlib import Path
 from typing import List
 import numpy as np
@@ -137,7 +138,8 @@ def keep_only_marine_polygons(polygons: gpd.GeoDataFrame,
   
 
 def plot_marine_polygons(polygons: gpd.GeoDataFrame,
-                         points: list[tuple[float, float]] | None = None) -> None:
+                         points: list[tuple[float, float]] | None = None,
+                         save: bool = False) -> None:
     
     projection = ccrs.PlateCarree()
 
@@ -186,16 +188,18 @@ def plot_marine_polygons(polygons: gpd.GeoDataFrame,
     plt.tight_layout()
 
     savepath = '../figures/map_MPA_SWIO.png'
-    if os.path.exists(savepath):
-        print(f' \n!!WARNING: {savepath} already exists. Saving this plot will override it.')
-    save = input(f"Save figure to {savepath} ? (y/n)")
-    if (save == 'y' or save == 'yes'):
-        print("Saving figure...")
+    if save:
+        os.makedirs(os.path.dirname(savepath), exist_ok=True)
+        if os.path.exists(savepath):
+            print(f' \n!!WARNING: {savepath} already exists. Overriding...')
+        print(f"Saving figure to {savepath}...")
         plt.savefig(savepath, dpi=300)
+        plt.close(fig)
         print("Done!\n ")
     else:
         print('Displaying...')
         plt.show()
+        plt.close(fig)
 
 
 def polygons_to_xarray(polygons: gpd.GeoDataFrame,
@@ -246,11 +250,27 @@ def save_polygons_to_nc(polygons_da: xr.DataArray,
 
 
 # -----------------------------
+# CLI Arguments
+# -----------------------------
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Process and plot Marine Protected Areas (MPAs) in the SWIO."
+    )
+    parser.add_argument(
+        "--save", action="store_true",
+        help="Save the figure as .png under ../figures instead of displaying it."
+    )
+    return parser.parse_args()
+
+
+# -----------------------------
 # Entry point
 # -----------------------------
 
 def main() -> None:
-    
+    args = parse_args()
+
     polygons = load_all_shapefiles(SHAPEFILES)
     indian_ocean = build_indian_ocean_polygon()
     land = load_land_polygons()
@@ -267,8 +287,8 @@ def main() -> None:
  
     release_points = [tuple(r) for r in np.loadtxt(SPOTS_FILE, comments='#')]
      
-    #plot_marine_polygons(marine_polygons)
-    plot_marine_polygons(marine_polygons, points=release_points)
+    #plot_marine_polygons(marine_polygons, save=args.save)
+    plot_marine_polygons(marine_polygons, points=release_points, save=args.save)
 
 if __name__ == "__main__":
     main()

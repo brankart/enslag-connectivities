@@ -39,6 +39,7 @@ map_colortime_bathy = False
 plot_colortraj = False
 map_colortraj = False
 map_colortraj_bathy = False
+plot_dt_comparison = False
 plot_particles = (plot_spaghetti or plot_colortime or map_colortime or map_colortime_bathy
                   or plot_colortraj or map_colortraj or map_colortraj_bathy)
 nens = 30
@@ -121,133 +122,136 @@ file_fig = [f"traj_{npart}part_memb{idx:03d}_{zone}_z{abs(dpt)}_{year}_{ens_id}_
 path_bin = [os.path.join(dir_bin,f) for f in file_bin]
 path_fig = [os.path.join(dir_fig,f) for f in file_fig]
 
-try:
-    os.makedirs(dir_fig)
-except OSError as e:
-    if e.errno != errno.EEXIST:
-        raise
+def main():
+    try:
+        os.makedirs(dir_fig)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
-try:
-    os.makedirs(f"figures/{ens_id}/modelvars/ssh")
-except OSError as e:
-    if e.errno != errno.EEXIST:
-        raise
-
-
-# ========================================================
-# LOADING DATA (OPTIONAL : LAND MASK)
-# ========================================================
-
-with xr.open_zarr(file_bathy_bin) as bathy_swiose :
-    mask = bathy_swiose['mask_rho']#.values
-    lon = bathy_swiose['lon'].values
-    lat = bathy_swiose['lat'].values
-    h = bathy_swiose['h'].values
-    # h = bathy_swiose['h'].where(mask==1).values
-    # Checking for aberrant values in CROCO mappables and re-gridding
-    lon_reg, lat_reg, mask_reg = tl.regrid_curv2reg(lon,lat,mask)
-    lon_reg, lat_reg, h_reg = tl.regrid_curv2reg(lon,lat,h)
-
-if map_ssh or map_ssh_multi :
-    ssh_ini_reg = []    
-    for n in file_ssh_bin :
-        ssh_n = xr.open_zarr(n)['zeta'].values[0,:,:]
-        # ssh_ini = ssh_swiose['zeta'].where(mask==1).values[0,:,:]
-        lon_reg, lat_reg, ssh_n_reg = tl.regrid_curv2reg(lon,lat,ssh_n)
-        ssh_ini_reg.append(ssh_n_reg)
-
-if plot_particles:
-    data_xarray = [xr.open_zarr(path_bin[idx]) for idx in range(len(sample))]
-    x = [data_xarray[idx]["lon"].values for idx in range(len(data_xarray))]
-    y = [data_xarray[idx]["lat"].values for idx in range(len(data_xarray))]
-    z = [data_xarray[idx]["z"].values for idx in range(len(data_xarray))] # depth of particles
-    x0 = x[0][:,0] # first indices of each trajectory
-    y0 = y[0][:,0]
+    try:
+        os.makedirs(f"figures/{ens_id}/modelvars/ssh")
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
-# ========================================================
-# FIGURE PRODUCTION
-# ========================================================
+    # ========================================================
+    # LOADING DATA (OPTIONAL : LAND MASK)
+    # ========================================================
 
-if map_bathy and force_resave:
-    tl.map_bathy(lon_reg, lat_reg, h_reg, savepath=file_bathy_fig)
-elif map_bathy:
-    tl.map_bathy(lon_reg, lat_reg, h_reg)
+    lon_reg, lat_reg, h_reg = None, None, None
+    if map_bathy or map_colortime_bathy or map_ssh or map_ssh_multi:
+        if os.path.exists(file_bathy_bin):
+            with xr.open_zarr(file_bathy_bin) as bathy_swiose:
+                mask = bathy_swiose['mask_rho']  # .values
+                lon = bathy_swiose['lon'].values
+                lat = bathy_swiose['lat'].values
+                h = bathy_swiose['h'].values
+                # Checking for aberrant values in CROCO mappables and re-gridding
+                lon_reg, lat_reg, mask_reg = tl.regrid_curv2reg(lon, lat, mask)
+                lon_reg, lat_reg, h_reg = tl.regrid_curv2reg(lon, lat, h)
+        else:
+            print(f" *** Warning: {file_bathy_bin} not found. ***")
 
-if map_ssh and force_resave:
-    tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg, savepath=file_ssh_fig)
-elif map_ssh:
-    tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg)
+    if map_ssh or map_ssh_multi:
+        ssh_ini_reg = []    
+        for n in file_ssh_bin:
+            if os.path.exists(n):
+                ssh_n = xr.open_zarr(n)['zeta'].values[0, :, :]
+                lon_reg, lat_reg, ssh_n_reg = tl.regrid_curv2reg(lon, lat, ssh_n)
+                ssh_ini_reg.append(ssh_n_reg)
+            else:
+                print(f" *** Warning: {n} not found. ***")
 
-if map_ssh_multi and force_resave:
-    tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6], savepath=file_ssh_multi_fig)
-elif map_ssh_multi:
-    tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6])
-
-
-if plot_spaghetti and force_resave :
-    tl.spaghetti(x, y, x0, y0, npart, ensemble, savepath=path_spag_fig)
-elif plot_spaghetti :
-    tl.spaghetti(x, y, x0, y0, npart, ensemble)
-
-
-if plot_colortime and force_resave :
-    tl.colorplot_time(x, y, x0, y0, npart, ensemble, savepath=path_colortime_fig)
-elif plot_colortime :
-    tl.colorplot_time(x, y, x0, y0, npart, ensemble)
-
-if plot_colortraj and force_resave :
-    tl.colorplot_traj(x, y, x0, y0, npart, ensemble, savepath=path_colortraj_fig)
-elif plot_colortraj :
-    tl.colorplot_traj(x, y, x0, y0, npart, ensemble)
-
-
-if map_colortime and force_resave :
-    tl.colormap_time(x, y, x0, y0, npart, ensemble, savepath=path_colortime_map)
-elif map_colortime:
-    tl.colormap_time(x, y, x0, y0, npart, ensemble)
-
-if map_colortraj and force_resave :
-    tl.colormap_traj(x, y, x0, y0, npart, ensemble, savepath=path_colortraj_map)
-elif map_colortraj:
-    tl.colormap_traj(x, y, x0, y0, npart, ensemble)
+    if plot_particles:
+        data_xarray = [xr.open_zarr(path_bin[idx]) for idx in range(len(sample))]
+        x = [data_xarray[idx]["lon"].values for idx in range(len(data_xarray))]
+        y = [data_xarray[idx]["lat"].values for idx in range(len(data_xarray))]
+        z = [data_xarray[idx]["z"].values for idx in range(len(data_xarray))]  # depth of particles
+        x0 = x[0][:, 0]  # first indices of each trajectory
+        y0 = y[0][:, 0]
 
 
-# Visualize trajectories along several timesteps (function  to make)
-data_dt = [xr.open_zarr(path_dt_bin[idx]) for idx in range(len(dtL))]
-x = [data_dt[idx]["lon"].values for idx in range(len(data_dt))]
-y = [data_dt[idx]["lat"].values for idx in range(len(data_dt))]
-z = [data_dt[idx]["z"].values for idx in range(len(data_dt))] # depth of particles
-x0 = x[0][:,0] # first indices of each trajectory
-y0 = y[0][:,0]
+    # ========================================================
+    # FIGURE PRODUCTION
+    # ========================================================
 
-tl.colormap_traj_dt(x, y, x0, y0, npart, dtL)
+    if map_bathy and force_resave:
+        tl.map_bathy(lon_reg, lat_reg, h_reg, savepath=file_bathy_fig)
+    elif map_bathy:
+        tl.map_bathy(lon_reg, lat_reg, h_reg)
 
+    if map_ssh and force_resave:
+        tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg, savepath=file_ssh_fig)
+    elif map_ssh:
+        tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg)
 
-
-if map_colortime_bathy and force_resave and sample==ensemble :
-    tl.colormap_time_bathy(x, y, x0, y0, npart, ensemble, dpt, lon_reg=lon_reg, lat_reg=lat_reg,
-                           h_reg=h_reg, savepath=path_colortime_map_bathy)
-elif map_colortime_bathy and force_resave and sample!=ensemble :
-    tl.colormap_time_bathy(x, y, x0, y0, npart, sample, dpt,
-                           lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg, savepath=path_colortime_map_bathy_sample)
-elif map_colortime_bathy and sample==ensemble:
-    tl.colormap_time_bathy(x, y, x0, y0, npart, ensemble, dpt,
-                           lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg)
-elif map_colortime_bathy and sample!=ensemble:
-    tl.colormap_time_bathy(x, y, x0, y0, npart, sample, dpt,
-                           lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg)
-
-#if map_colortraj_bathy and force_resave :
-#    tl.colormap_traj_bathy(x, y, x0, y0, npart, ensemble, dpt, background=False, lon_reg=lon_reg,
-#                           lat_reg=lat_reg, h_reg=h_reg, savepath=path_colortraj_map_bathy)
-#elif map_colortraj_bathy :
-#    tl.colormap_traj_bathy(x, y, x0, y0, npart, ensemble, dpt, background=False,
-#                           lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg)
+    if map_ssh_multi and force_resave:
+        tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6], savepath=file_ssh_multi_fig)
+    elif map_ssh_multi:
+        tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6])
 
 
-print()
-print(" *** Done ! *** ")
+    if plot_spaghetti and force_resave:
+        tl.spaghetti(x, y, x0, y0, npart, ensemble, savepath=path_spag_fig)
+    elif plot_spaghetti:
+        tl.spaghetti(x, y, x0, y0, npart, ensemble)
+
+
+    if plot_colortime and force_resave:
+        tl.colorplot_time(x, y, x0, y0, npart, ensemble, savepath=path_colortime_fig)
+    elif plot_colortime:
+        tl.colorplot_time(x, y, x0, y0, npart, ensemble)
+
+    if plot_colortraj and force_resave:
+        tl.colorplot_traj(x, y, x0, y0, npart, ensemble, savepath=path_colortraj_fig)
+    elif plot_colortraj:
+        tl.colorplot_traj(x, y, x0, y0, npart, ensemble)
+
+
+    if map_colortime and force_resave:
+        tl.colormap_time(x, y, x0, y0, npart, ensemble, savepath=path_colortime_map)
+    elif map_colortime:
+        tl.colormap_time(x, y, x0, y0, npart, ensemble)
+
+    if map_colortraj and force_resave:
+        tl.colormap_traj(x, y, x0, y0, npart, ensemble, savepath=path_colortraj_map)
+    elif map_colortraj:
+        tl.colormap_traj(x, y, x0, y0, npart, ensemble)
+
+
+    if plot_dt_comparison:
+        # Visualize trajectories along several timesteps
+        data_dt = [xr.open_zarr(path_dt_bin[idx]) for idx in range(len(dtL))]
+        x_dt = [data_dt[idx]["lon"].values for idx in range(len(data_dt))]
+        y_dt = [data_dt[idx]["lat"].values for idx in range(len(data_dt))]
+        z_dt = [data_dt[idx]["z"].values for idx in range(len(data_dt))]  # depth of particles
+        x0_dt = x_dt[0][:, 0]  # first indices of each trajectory
+        y0_dt = y_dt[0][:, 0]
+
+        tl.colormap_traj_dt(x_dt, y_dt, x0_dt, y0_dt, npart, dtL)
+
+
+    if map_colortime_bathy and force_resave and sample == ensemble:
+        tl.colormap_time_bathy(x, y, x0, y0, npart, ensemble, dpt, lon_reg=lon_reg, lat_reg=lat_reg,
+                               h_reg=h_reg, savepath=path_colortime_map_bathy)
+    elif map_colortime_bathy and force_resave and sample != ensemble:
+        tl.colormap_time_bathy(x, y, x0, y0, npart, sample, dpt,
+                               lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg, savepath=path_colortime_map_bathy_sample)
+    elif map_colortime_bathy and sample == ensemble:
+        tl.colormap_time_bathy(x, y, x0, y0, npart, ensemble, dpt,
+                               lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg)
+    elif map_colortime_bathy and sample != ensemble:
+        tl.colormap_time_bathy(x, y, x0, y0, npart, sample, dpt,
+                               lon_reg=lon_reg, lat_reg=lat_reg, h_reg=h_reg)
+
+    print()
+    print(" *** Done ! *** ")
+
+
+if __name__ == "__main__":
+    main()
 
 
 

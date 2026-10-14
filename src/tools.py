@@ -8,6 +8,7 @@ import numpy as np
 import xarray as xr
 import scipy.interpolate as itp
 import parcels
+from parcels import StatusCode
 import matplotlib.pyplot as plt
 import matplotlib.collections as clc
 import matplotlib.colors as clr
@@ -47,13 +48,15 @@ def ArgoVerticalMovement(particle, fieldset, time):
     vertical_speed = 0.10  # sink and rise speed in m/s
     cycletime = 10 * 86400  # total time of cycle in seconds
     drifttime = 9 * 86400  # time of deep drift in seconds
+    particle_ddepth = 0.0
 
     if particle.cycle_phase == 0:
         # Phase 0: Sinking with vertical_speed until depth is driftdepth
-        particle_ddepth += vertical_speed * particle.dt
+        particle_ddepth = vertical_speed * particle.dt
         if particle.depth + particle_ddepth >= driftdepth:
             particle_ddepth = driftdepth - particle.depth
             particle.cycle_phase = 1
+        particle.depth += particle_ddepth
 
     elif particle.cycle_phase == 1:
         # Phase 1: Drifting at depth for drifttime seconds
@@ -64,19 +67,21 @@ def ArgoVerticalMovement(particle, fieldset, time):
 
     elif particle.cycle_phase == 2:
         # Phase 2: Sinking further to maxdepth
-        particle_ddepth += vertical_speed * particle.dt
+        particle_ddepth = vertical_speed * particle.dt
         if particle.depth + particle_ddepth >= maxdepth:
             particle_ddepth = maxdepth - particle.depth
             particle.cycle_phase = 3
+        particle.depth += particle_ddepth
 
     elif particle.cycle_phase == 3:
         # Phase 3: Rising with vertical_speed until at surface
-        particle_ddepth -= vertical_speed * particle.dt
+        particle_ddepth = -vertical_speed * particle.dt
         # particle.temp = fieldset.temp[time, particle.depth, particle.lat, particle.lon]  # if fieldset has temperature
         if particle.depth + particle_ddepth <= fieldset.mindepth:
             particle_ddepth = fieldset.mindepth - particle.depth
             # particle.temp = 0./0.  # reset temperature to NaN at end of sampling cycle
             particle.cycle_phase = 4
+        particle.depth += particle_ddepth
 
     elif particle.cycle_phase == 4:
         # Phase 4: Transmitting at surface until cycletime is reached
