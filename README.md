@@ -31,7 +31,7 @@ To install the whole toolset on your cluster, just follow these steps :
 
 1) unzip the the repo in your destination directory and go to the env directory,
 2) execute create_parcels_venv.sh,
-3) execute build_craympi_parcels.sh,
+3) execute build-craympi-parcels.sh,
 4) install the plothon environment with conda, micromamba or venv with the plothon.yml configuration file.
 
 However, you may just want to use the post-processing scripts from your own Lagrangian outputs. In this case, please proceed as follows :
@@ -55,27 +55,26 @@ To start using the toolset, go to the src directory. You should find the followi
 
 **INPUT SHAPING**
 
-+ **[getvars_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
-+ **[plot_polygons.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_polygons.py)** retrieves GIS vector geographic data (e.g. marine protected areas, coral reefs) from the UNEP online catalogue and visualizes them along with potential spawning sites. **!!! NB:** in order to run this script, you need to [download the UNEP data yourself first](https://wesr.unep.org/data-catalogue) to the input directory.
++ **[getvars_swiose.py:](src/getvars_swiose.py)** extracts specific variables from the input simulations, i.e. ssh or bathymetry, to visualize them alongside OceanParcels outputs.
++ **[plot_polygons.py:](src/plot_polygons.py)** retrieves GIS vector geographic data (e.g. marine protected areas, coral reefs) from the UNEP online catalogue and visualizes them along with potential spawning sites. **!!! NB:** in order to run this script, you need to [download the UNEP data yourself first](https://wesr.unep.org/data-catalogue) to the input directory.
   
 **LAGRANGIAN SIMULATION**
 
-+ **[runseq_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runseq_swiose.py)** computes lagrangian trajectories with ocean parcels, using SWIOSE CROCO ensemble outputs.
-+ **[runpar_swiose_opt.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/runpar_swiose_opt.py)** computes lagrangian trajectories with ocean parcels and an MPI parallelization, using SWIOSE CROCO ensemble outputs.
-+ **[slurm_parcels.sh:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/slurm_parcels.sh)** submits runpar_swiose_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
++ **[runpar_ini_opt.py:](src/runpar_ini_opt.py)** computes lagrangian trajectories with ocean parcels and an MPI parallelization, using SWIOSE CROCO ensemble outputs.
++ **[slurmjob_parcels.sh:](src/slurmjob_parcels.sh)** submits runpar_ini_opt.py as a batch job on a cluster which can perform intensive parallel computing on a cluster that uses the SLURM job manager (here Adastra, operated by the CINES).
   
 **LAGRANGIAN VISUALIZATION**
 
-+ **[visu_swiose.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/visu_swiose.py)** produces figures to visualize *runseq_swiose.py* outputs.
++ **[visu_swiose.py:](src/visu_swiose.py)** produces figures to visualize Lagrangian simulation outputs.
 
 **CONNECTIVITY PROCESSING**
 
-+ **[count_particles_per_box.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/count_particles_per_box.py)** produces a bunch of connectivity metrics from lagrangian trajectories (particle density grid, in-degree matrix, betweenness) and saves it to a netCDF file.
++ **[count_particles_per_box.py:](src/count_particles_per_box.py)** produces a bunch of connectivity metrics from lagrangian trajectories (particle density grid, site-to-site connectivity matrix, in-degree, betweenness centrality) and saves it to netCDF and CSV files.
 
 **CONNECTIVITY POSTPROCESSING**
 
-+ **[plot_box_particle_counts.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/plot_box_particle_counts.py)** produces figures to visualize *count_particles_per_box.py* outputs.
++ **[plot_box_particle_counts.py:](src/plot_box_particle_counts.py)** produces figures to visualize *count_particles_per_box.py* outputs (with options for total, per-member, and per-spawning-spot maps).
     
 **ROUTINES**
 
-+ **[tools.py:](https://github.com/TinoBELLAYER/BRIDGES-AVATAR-lagrangian/blob/main/tools.py)** a set of functions to perform some specific tasks involved in this work, such as particle generation, and specific visualization.
++ **[tools.py:](src/tools.py)** a set of functions to perform some specific tasks involved in this work, such as particle generation, regridding, and specific visualization.

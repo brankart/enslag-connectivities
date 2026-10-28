@@ -2,28 +2,33 @@
 # ================================================================
 # PLOT BOX PARTICLE COUNTS
 # ----------------------------------------------------------------
-# Reads the box_particle_counts.nc file produced by
-# count_particles_per_box.py and plots a colormap of the number
-# of particles that made at least one pass through each
+# Reads the box_particle_counts.nc / box_passages_long.csv files
+# produced by count_particles_per_box.py and plots a colormap of
+# the number of particles that made at least one pass through each
 # subdomain box.
 #
-# Produces, depending on the options below / command-line flags:
-#   - a map of n_particles_total (all members combined)
-#   - optionally, one map per ensemble member (n_particles_per_member)
-#   - optionally, release points overlaid as markers
-#
-# COMMAND-LINE OPTIONS
+# COMMAND-LINE OPTIONS (all independent, usable alone or combined)
 # ----------------------------------------------------------------
-#   --member MEMBER   plot a single ensemble member (e.g. --member 003),
-#                      using n_particles_per_member from the NetCDF file
-#   --spot SPOT_ID     plot a single spawning point (e.g. --spot 4),
-#                      using the long-format box_passages_long.csv table
-#                      produced by count_particles_per_box.py (requires
-#                      that script to have been run with GROUP_BY_SPAWN=True)
+#   --member MEMBER   restrict to a single ensemble member
+#                      (e.g. --member 003)
+#   --spot SPOT_ID     restrict to a single spawning point
+#                      (e.g. --spot 4); requires box_passages_long.csv
+#                      generated with GROUP_BY_SPAWN=True, and its
+#                      'ilat'/'ilon' columns (added by the current
+#                      version of count_particles_per_box.py)
+#   --save             save the figure(s) as .png files under
+#                      OUTPUT_DIR instead of displaying them
 #
-# --member and --spot can be combined (single member, single spawn point).
-# With no flags, the script falls back to the PLOT_TOTAL / PLOT_PER_MEMBER
-# toggles below.
+# Examples:
+#   plot_box_particle_counts.py                        -> show total map
+#   plot_box_particle_counts.py --member 003            -> show member 003, all spots
+#   plot_box_particle_counts.py --spot 4                -> show spot 4, all members
+#   plot_box_particle_counts.py --member 003 --spot 4   -> show member 003 / spot 4 only
+#   plot_box_particle_counts.py --save                  -> save total map to OUTPUT_DIR
+#   plot_box_particle_counts.py --member 003 --save     -> save member 003 map
+#
+# With none of --member/--spot given, the script falls back to the
+# PLOT_TOTAL / PLOT_PER_MEMBER toggles below.
 # ================================================================
 
 import os
@@ -53,8 +58,8 @@ SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
 
 OUTPUT_DIR = os.path.join(PATH_ABS, "figures/ini")
 
-PLOT_TOTAL = True            # plot the all-members-combined map
-PLOT_PER_MEMBER = False      # also plot one map per ensemble member (can be many figures)
+PLOT_TOTAL = True            # (no-flags fallback) plot the all-members-combined map
+PLOT_PER_MEMBER = False      # (no-flags fallback) also plot one map per ensemble member
 
 LOG_SCALE = True             # counts often span orders of magnitude -> log colorbar
 CMAP = "viridis"
@@ -94,8 +99,10 @@ def make_axes():
     return fig, ax, transform_kwargs
 
 
-def plot_grid(lon_box, lat_box, counts, title, out_path,
+def plot_grid(lon_box, lat_box, counts, title, out_path, save,
               spawn_lon=None, spawn_lat=None):
+    """Draw one colormap. If save is True, write out_path as a .png;
+    otherwise display it interactively."""
 
     fig, ax, tkw = make_axes()
 
@@ -103,8 +110,8 @@ def plot_grid(lon_box, lat_box, counts, title, out_path,
     counts_plot[counts_plot == 0] = np.nan  # leave empty boxes blank
 
     if LOG_SCALE:
-        vmax = np.nanmax(counts_plot) if np.isfinite(np.nanmax(counts_plot)) else 1
-        norm = mcolors.LogNorm(vmin=1, vmax=max(vmax, 1))
+        finite_max = np.nanmax(counts_plot) if np.any(np.isfinite(counts_plot)) else 1
+        norm = mcolors.LogNorm(vmin=1, vmax=max(finite_max, 1))
     else:
         norm = None
 
@@ -131,22 +138,30 @@ def plot_grid(lon_box, lat_box, counts, title, out_path,
     ax.set_title(title)
     fig.tight_layout()
 
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    fig.savefig(out_path, dpi=DPI)
-    plt.close(fig)
-    print(f"Saved {out_path}", flush=True)
+    if save:
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        fig.savefig(out_path, dpi=DPI)
+        plt.close(fig)
+        print(f"Saved {out_path}", flush=True)
+    else:
+        plt.show()
+        plt.close(fig)
 
 
-def spot_grid_from_long_table(long_csv, spot_id, lon_box, lat_box, member=None):
+def spot_grid_from_long_table(long_csv, spot_id, nlat, nlon, member=None):
     """Build a (nlat, nlon) count grid for a single spawning point from the
     long-format passages table, optionally restricted to a single member.
+
+    Uses the exact integer box indices ('ilat', 'ilon') written by
+    count_particles_per_box.py, rather than matching on floating-point
+    box-center coordinates -- this avoids precision-related mismatches
+    and is vectorised (no python-level row loop).
 
     NOTE: if the table was generated with GROUP_BY_TIME=True, it contains
     one row per time bin per box. Those are summed here to get a whole-run
     total, which can slightly OVER-count particles that revisit the same
-    box in more than one time window (see the caution note printed by
-    count_particles_per_box.py). For an exact whole-run total with no time
-    breakdown, regenerate the table with GROUP_BY_TIME=False.
+    box in more than one time window. For an exact whole-run total with
+    no time breakdown, regenerate the table with GROUP_BY_TIME=False.
     """
 
     df = pd.read_csv(long_csv)
@@ -156,36 +171,38 @@ def spot_grid_from_long_table(long_csv, spot_id, lon_box, lat_box, member=None):
             f"{long_csv} has no 'spawn_id' column -- it must be regenerated "
             f"with GROUP_BY_SPAWN=True in count_particles_per_box.py"
         )
+    if 'ilat' not in df.columns or 'ilon' not in df.columns:
+        raise ValueError(
+            f"{long_csv} has no 'ilat'/'ilon' columns -- it must be "
+            f"regenerated with the current version of count_particles_per_box.py"
+        )
 
     df = df[df['spawn_id'] == spot_id]
 
     if member is not None:
         df = df[df['member'].astype(str) == str(member)]
 
+    if df.empty:
+        raise ValueError(
+            f"No rows found for spot {spot_id}"
+            + (f" and member {member}" if member is not None else "")
+        )
+
     if 'time_bin' in df.columns and df['time_bin'].nunique() > 1:
         print("NOTE: summing across time bins for this spot/member -- this "
               "can slightly over-count particles that revisit the same box "
               "in multiple time windows.", flush=True)
 
-    grouped = df.groupby(['lat_box', 'lon_box'])['n_particles'].sum().reset_index()
+    grouped = df.groupby(['ilat', 'ilon'])['n_particles'].sum().reset_index()
 
-    nlat, nlon = len(lat_box), len(lon_box)
     grid = np.zeros((nlat, nlon), dtype=np.float64)
-
-    lat_idx = {v: i for i, v in enumerate(lat_box)}
-    lon_idx = {v: i for i, v in enumerate(lon_box)}
-
-    for _, row in grouped.iterrows():
-        i = lat_idx.get(row['lat_box'])
-        j = lon_idx.get(row['lon_box'])
-        if i is not None and j is not None:
-            grid[i, j] = row['n_particles']
+    grid[grouped['ilat'].to_numpy(), grouped['ilon'].to_numpy()] = grouped['n_particles'].to_numpy()
 
     return grid
 
 
 # ================================================================
-# MAIN
+# CLI ARGUMENTS
 # ================================================================
 
 def parse_args():
@@ -194,15 +211,23 @@ def parse_args():
     )
     parser.add_argument(
         "--member", type=str, default=None,
-        help="Plot a single ensemble member (e.g. --member 003)."
+        help="Restrict to a single ensemble member (e.g. --member 003)."
     )
     parser.add_argument(
         "--spot", type=int, default=None,
-        help="Plot a single spawning point index (e.g. --spot 4). "
+        help="Restrict to a single spawning point index (e.g. --spot 4). "
              "Requires box_passages_long.csv generated with GROUP_BY_SPAWN=True."
+    )
+    parser.add_argument(
+        "--save", action="store_true",
+        help="Save the figure(s) as .png under OUTPUT_DIR instead of displaying them."
     )
     return parser.parse_args()
 
+
+# ================================================================
+# MAIN
+# ================================================================
 
 def main():
 
@@ -212,15 +237,17 @@ def main():
 
     lon_box = ds["lon_box"].values
     lat_box = ds["lat_box"].values
+    nlat, nlon = len(lat_box), len(lon_box)
 
     spawn_lon, spawn_lat = load_release_points() if SHOW_RELEASE_POINTS else (None, None)
 
     # ------------------------------------------------------------
-    # single spawning point (optionally + single member)
+    # single spawning point, optionally + single member
+    # (--spot alone, or --spot together with --member)
     # ------------------------------------------------------------
     if args.spot is not None:
         counts = spot_grid_from_long_table(
-            INPUT_LONG_CSV, args.spot, lon_box, lat_box, member=args.member
+            INPUT_LONG_CSV, args.spot, nlat, nlon, member=args.member
         )
         title = f"Particles passing through each box -- spawn point {args.spot}"
         fname = f"box_particle_counts_spot_{args.spot}"
@@ -231,13 +258,14 @@ def main():
             lon_box, lat_box, counts,
             title=title,
             out_path=os.path.join(OUTPUT_DIR, f"{fname}.png"),
+            save=args.save,
             spawn_lon=spawn_lon, spawn_lat=spawn_lat
         )
         ds.close()
         return
 
     # ------------------------------------------------------------
-    # single member, all spawning points combined
+    # single member, all spawning points combined (--member alone)
     # ------------------------------------------------------------
     if args.member is not None:
         counts = ds["n_particles_per_member"].sel(member=args.member).values
@@ -245,21 +273,22 @@ def main():
             lon_box, lat_box, counts,
             title=f"Number of particles passing through each box (member {args.member})",
             out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_member_{args.member}.png"),
+            save=args.save,
             spawn_lon=spawn_lon, spawn_lat=spawn_lat
         )
         ds.close()
         return
 
     # ------------------------------------------------------------
-    # default behaviour: fall back to the USER PARAMETERS toggles
+    # default behaviour (no --member / --spot): USER PARAMETERS toggles
     # ------------------------------------------------------------
     if PLOT_TOTAL:
         counts = ds["n_particles_total"].values
-        out_path = os.path.join(OUTPUT_DIR, "box_particle_counts_total.png")
         plot_grid(
             lon_box, lat_box, counts,
             title="Number of particles passing through each box (all members)",
-            out_path=out_path,
+            out_path=os.path.join(OUTPUT_DIR, "box_particle_counts_total.png"),
+            save=args.save,
             spawn_lon=spawn_lon, spawn_lat=spawn_lat
         )
 
@@ -267,11 +296,11 @@ def main():
         members = ds["member"].values
         for m in members:
             counts = ds["n_particles_per_member"].sel(member=m).values
-            out_path = os.path.join(OUTPUT_DIR, f"box_particle_counts_member_{m}.png")
             plot_grid(
                 lon_box, lat_box, counts,
                 title=f"Number of particles passing through each box (member {m})",
-                out_path=out_path,
+                out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_member_{m}.png"),
+                save=args.save,
                 spawn_lon=spawn_lon, spawn_lat=spawn_lat
             )
 
