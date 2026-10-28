@@ -22,6 +22,12 @@ import cartopy.feature as cfeature
 import cartopy.mpl.gridliner as mg
 import parcels
 import tools as tl
+from config import (
+    ENSEMBLE_DIR,
+    OUTPUT_DIR,
+    FIGURES_DIR,
+    N_MEMBERS,
+)
 
 
 # ========================================================
@@ -67,21 +73,24 @@ elif zone == "Southern":
 
 
 # ========================================================
-# ACCESS PATHS
+# ACCESS PATHS
 # ========================================================
 
-swio_dataset_folder = f'/lus/store/CT1/c1601279/lweiss/run_croco/SWIOSE_dev/run_swio2_stoens30_2019_{ens_id}'
+swio_dataset_folder = os.environ.get(
+    "ENSLAG_DATA_DIR",
+    str(ENSEMBLE_DIR) if str(ENSEMBLE_DIR) != "your_path_to_ensemble_data" else f"/lus/store/CT1/c1601279/lweiss/run_croco/SWIOSE_dev/run_swio2_stoens30_2019_{ens_id}"
+)
 fname = [f"{idx:03d}swiose_avg.nc" for idx in sample]
 file = [os.path.join(swio_dataset_folder, f) for f in fname]
 
-file_bathy_bin = f"../output/{ens_id}/bathy.zarr"
-file_bathy_fig = f"../figures/{ens_id}/bathy.png"
-file_ssh_bin = [f"../output/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.zarr" for idx in sample]
-file_ssh_fig = [f"../figures/{ens_id}/modelvars/ssh/ssh_memb{idx:03d}_{year}_{ens_id}.png" for idx in sample]
-file_ssh_multi_fig = f"../figures/{ens_id}/modelvars/ssh/ssh_multi_{year}_{ens_id}.png"
+file_bathy_bin = str(OUTPUT_DIR / ens_id / "bathy.zarr")
+file_bathy_fig = str(FIGURES_DIR / ens_id / "bathy.png")
+file_ssh_bin = [str(OUTPUT_DIR / ens_id / "modelvars/ssh" / f"ssh_memb{idx:03d}_{year}_{ens_id}.zarr") for idx in sample]
+file_ssh_fig = [str(FIGURES_DIR / ens_id / "modelvars/ssh" / f"ssh_memb{idx:03d}_{year}_{ens_id}.png") for idx in sample]
+file_ssh_multi_fig = str(FIGURES_DIR / ens_id / "modelvars/ssh" / f"ssh_multi_{year}_{ens_id}.png")
 
-dir_bin = f"../output/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
-dir_fig = f"../figures/{ens_id}/{zone}/z{abs(dpt)}/{npart}part"
+dir_bin = str(OUTPUT_DIR / ens_id / zone / f"z{abs(dpt)}" / f"{npart}part")
+dir_fig = str(FIGURES_DIR / ens_id / zone / f"z{abs(dpt)}" / f"{npart}part")
 
 file_ensmean_bin = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.zarr"
 file_ensmean_fig = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.png"
@@ -124,13 +133,13 @@ path_fig = [os.path.join(dir_fig,f) for f in file_fig]
 
 def main():
     try:
-        os.makedirs(dir_fig)
+        os.makedirs(dir_fig, exist_ok=True)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
     try:
-        os.makedirs(f"figures/{ens_id}/modelvars/ssh")
+        os.makedirs(FIGURES_DIR / ens_id / "modelvars/ssh", exist_ok=True)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise

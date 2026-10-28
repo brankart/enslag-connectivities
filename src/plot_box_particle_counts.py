@@ -10,7 +10,7 @@
 # COMMAND-LINE OPTIONS (all independent, usable alone or combined)
 # ----------------------------------------------------------------
 #   --member MEMBER   restrict to a single ensemble member
-#                      (e.g. --member 003)
+#                      (e.g. --member 003 or --member member_003)
 #   --spot SPOT_ID     restrict to a single spawning point
 #                      (e.g. --spot 4); requires box_passages_long.csv
 #                      generated with GROUP_BY_SPAWN=True, and its
@@ -22,6 +22,7 @@
 # Examples:
 #   plot_box_particle_counts.py                        -> show total map
 #   plot_box_particle_counts.py --member 003            -> show member 003, all spots
+#   plot_box_particle_counts.py --member member_003     -> show member 003, all spots
 #   plot_box_particle_counts.py --spot 4                -> show spot 4, all members
 #   plot_box_particle_counts.py --member 003 --spot 4   -> show member 003 / spot 4 only
 #   plot_box_particle_counts.py --save                  -> save total map to OUTPUT_DIR
@@ -32,6 +33,7 @@
 # ================================================================
 
 import os
+import re
 import argparse
 import numpy as np
 import pandas as pd
@@ -51,12 +53,18 @@ except ImportError:
 # USER PARAMETERS
 # ================================================================
 
-PATH_ABS = 'your_absolute_path_to_enslag_connectivities'
-INPUT_NC = os.path.join(PATH_ABS, "output/box_particle_counts.nc")
-INPUT_LONG_CSV = os.path.join(PATH_ABS, "output/box_passages_long.csv")
-SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
+from config import (
+    OUTPUT_DIR as BASE_OUTPUT_DIR,
+    FIGURES_DIR,
+    SPOTS_FILE,
+    format_member_id,
+)
 
-OUTPUT_DIR = os.path.join(PATH_ABS, "figures/ini")
+INPUT_NC = str(BASE_OUTPUT_DIR / "box_particle_counts.nc")
+INPUT_LONG_CSV = str(BASE_OUTPUT_DIR / "box_passages_long.csv")
+SPOTS_FILE = str(SPOTS_FILE)
+
+OUTPUT_DIR = str(FIGURES_DIR / "ini")
 
 PLOT_TOTAL = True            # (no-flags fallback) plot the all-members-combined map
 PLOT_PER_MEMBER = False      # (no-flags fallback) also plot one map per ensemble member
@@ -180,7 +188,12 @@ def spot_grid_from_long_table(long_csv, spot_id, nlat, nlon, member=None):
     df = df[df['spawn_id'] == spot_id]
 
     if member is not None:
-        df = df[df['member'].astype(str) == str(member)]
+        std_m = format_member_id(member)
+        m_match = re.search(r"(\d+)", str(member))
+        raw_num = m_match.group(1) if m_match else str(member)
+        int_num = str(int(raw_num)) if raw_num.isdigit() else raw_num
+        valid = {str(member), std_m, raw_num, int_num}
+        df = df[df['member'].astype(str).isin(valid)]
 
     if df.empty:
         raise ValueError(
@@ -211,7 +224,7 @@ def parse_args():
     )
     parser.add_argument(
         "--member", type=str, default=None,
-        help="Restrict to a single ensemble member (e.g. --member 003)."
+        help="Restrict to a single ensemble member (e.g. --member 003 or --member member_003)."
     )
     parser.add_argument(
         "--spot", type=int, default=None,
@@ -246,14 +259,15 @@ def main():
     # (--spot alone, or --spot together with --member)
     # ------------------------------------------------------------
     if args.spot is not None:
+        member_id = format_member_id(args.member) if args.member is not None else None
         counts = spot_grid_from_long_table(
-            INPUT_LONG_CSV, args.spot, nlat, nlon, member=args.member
+            INPUT_LONG_CSV, args.spot, nlat, nlon, member=member_id
         )
         title = f"Particles passing through each box -- spawn point {args.spot}"
         fname = f"box_particle_counts_spot_{args.spot}"
-        if args.member is not None:
-            title += f", member {args.member}"
-            fname += f"_member_{args.member}"
+        if member_id is not None:
+            title += f", {member_id}"
+            fname += f"_{member_id}"
         plot_grid(
             lon_box, lat_box, counts,
             title=title,
@@ -268,11 +282,26 @@ def main():
     # single member, all spawning points combined (--member alone)
     # ------------------------------------------------------------
     if args.member is not None:
-        counts = ds["n_particles_per_member"].sel(member=args.member).values
+        member_id = format_member_id(args.member)
+        avail = list(ds["member"].values)
+        if member_id in avail:
+            sel_m = member_id
+        elif args.member in avail:
+            sel_m = args.member
+        else:
+            m_num = re.search(r"(\d+)", str(args.member))
+            num_str = m_num.group(1) if m_num else str(args.member)
+            matching = [m for m in avail if str(m) in (num_str, str(int(num_str)), f"{int(num_str):03d}")]
+            if matching:
+                sel_m = matching[0]
+            else:
+                sel_m = member_id
+
+        counts = ds["n_particles_per_member"].sel(member=sel_m).values
         plot_grid(
             lon_box, lat_box, counts,
-            title=f"Number of particles passing through each box (member {args.member})",
-            out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_member_{args.member}.png"),
+            title=f"Number of particles passing through each box ({member_id})",
+            out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_{member_id}.png"),
             save=args.save,
             spawn_lon=spawn_lon, spawn_lat=spawn_lat
         )
@@ -296,10 +325,11 @@ def main():
         members = ds["member"].values
         for m in members:
             counts = ds["n_particles_per_member"].sel(member=m).values
+            m_std = format_member_id(m)
             plot_grid(
                 lon_box, lat_box, counts,
-                title=f"Number of particles passing through each box (member {m})",
-                out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_member_{m}.png"),
+                title=f"Number of particles passing through each box ({m_std})",
+                out_path=os.path.join(OUTPUT_DIR, f"box_particle_counts_{m_std}.png"),
                 save=args.save,
                 spawn_lon=spawn_lon, spawn_lat=spawn_lat
             )

@@ -84,6 +84,7 @@
 
 import os
 import glob
+import re
 import argparse
 import numpy as np
 import pandas as pd
@@ -110,12 +111,22 @@ size = comm.Get_size()
 # USER PARAMETERS
 # ================================================================
 
-PATH_ABS = 'your_path_to_enslag_connectivities'
-TRAJ_DIR = os.path.join(PATH_ABS, "output/ini")
-TRAJ_PATTERN = "traj_member_*.zarr"
-SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
+from config import (
+    OUTPUT_DIR,
+    SPOTS_FILE,
+    BOX_SIZE_KM as DEFAULT_BOX_SIZE_KM,
+    PARTICLES_PER_POINT as DEFAULT_PARTICLES_PER_POINT,
+    SITE_RADIUS_KM as DEFAULT_SITE_RADIUS_KM,
+    TIME_BIN_DAYS as DEFAULT_TIME_BIN_DAYS,
+    extract_member_id,
+    format_member_id,
+)
 
-BOX_SIZE_KM = 50.0   # side length of each square subdomain box
+TRAJ_DIR = str(OUTPUT_DIR / "ini")
+TRAJ_PATTERN = "traj_member_*.zarr"
+SPOTS_FILE = str(SPOTS_FILE)
+
+BOX_SIZE_KM = DEFAULT_BOX_SIZE_KM   # side length of each square subdomain box
 
 # Domain bounds in degrees. Set to None to auto-detect from the
 # trajectory stores (a single lazy min/max pass, cheap).
@@ -123,25 +134,25 @@ LON_MIN, LON_MAX = None, None
 LAT_MIN, LAT_MAX = None, None
 
 # ---- breakdown options -----------------------------------------
-# Must match the values used in runpar_ini_opt_2Dgauss.py so that
+# Must match the values used in runpar_ini_opt.py so that
 # particle index -> spawn point mapping is correct.
-PARTICLES_PER_POINT = 4000
+PARTICLES_PER_POINT = DEFAULT_PARTICLES_PER_POINT
 
 GROUP_BY_SPAWN = True     # break passages down by approximate spawning point
 GROUP_BY_TIME = True      # break passages down by time-of-passage window
-TIME_BIN_DAYS = 5.0       # width of each time-of-passage window, in days
-                          # (only used if GROUP_BY_TIME is True)
+TIME_BIN_DAYS = DEFAULT_TIME_BIN_DAYS  # width of each time-of-passage window, in days
+                                      # (only used if GROUP_BY_TIME is True)
 
 # ---- site-to-site connectivity / graph metrics -----------------
 COMPUTE_CONNECTIVITY = True
-SITE_RADIUS_KM = 25.0     # a particle "arrives" at a site if it comes within
-                          # this radius of the site's coordinates at any point
+SITE_RADIUS_KM = DEFAULT_SITE_RADIUS_KM  # a particle "arrives" at a site if it comes within
+                                        # this radius of the site's coordinates at any point
 
-OUTPUT_NC = os.path.join(PATH_ABS, "output/box_particle_counts.nc")
-OUTPUT_CSV = os.path.join(PATH_ABS, "output/box_particle_counts.csv")
-OUTPUT_LONG_CSV = os.path.join(PATH_ABS, "output/box_passages_long.csv")
-OUTPUT_CONNECTIVITY_CSV = os.path.join(PATH_ABS, "output/connectivity_matrix.csv")
-OUTPUT_METRICS_CSV = os.path.join(PATH_ABS, "output/connectivity_metrics.csv")
+OUTPUT_NC = str(OUTPUT_DIR / "box_particle_counts.nc")
+OUTPUT_CSV = str(OUTPUT_DIR / "box_particle_counts.csv")
+OUTPUT_LONG_CSV = str(OUTPUT_DIR / "box_passages_long.csv")
+OUTPUT_CONNECTIVITY_CSV = str(OUTPUT_DIR / "connectivity_matrix.csv")
+OUTPUT_METRICS_CSV = str(OUTPUT_DIR / "connectivity_metrics.csv")
 
 
 # ================================================================
@@ -362,6 +373,46 @@ def process_member(file, lon_edges, lat_edges, member_name,
 
 
 # ================================================================
+# TRAJECTORY STORE DISCOVERY
+# ================================================================
+
+def discover_trajectory_stores(traj_dir, traj_pattern=TRAJ_PATTERN):
+    """Discover trajectory stores in traj_dir.
+
+    Handles:
+      1) Flat stores: traj_dir/traj_member_*.zarr
+      2) Partitioned MPI rank subdirectories: traj_dir/traj_member_*.zarr/proc*.zarr
+      3) Custom glob patterns
+
+    Returns:
+      dict mapping standardized member identifier (e.g. 'member_001')
+      to a list of valid zarr store path(s).
+    """
+    direct_matches = sorted(glob.glob(os.path.join(traj_dir, traj_pattern)))
+    all_paths = []
+
+    for p in direct_matches:
+        if os.path.isdir(p):
+            sub_procs = sorted(glob.glob(os.path.join(p, "proc*.zarr")))
+            if sub_procs:
+                all_paths.extend(sub_procs)
+            else:
+                all_paths.append(p)
+        else:
+            all_paths.append(p)
+
+    if not all_paths and not traj_pattern.endswith("proc*.zarr"):
+        all_paths = sorted(glob.glob(os.path.join(traj_dir, "traj_member_*.zarr/proc*.zarr")))
+
+    member_to_paths = {}
+    for path in all_paths:
+        m_id = extract_member_id(path)
+        member_to_paths.setdefault(m_id, []).append(path)
+
+    return member_to_paths
+
+
+# ================================================================
 # MAIN PROGRAM
 # ================================================================
 
@@ -371,16 +422,20 @@ def main():
     box_size_km = args.mesh if args.mesh is not None else BOX_SIZE_KM
     site_radius_km = args.radius if args.radius is not None else SITE_RADIUS_KM
 
-    files = sorted(glob.glob(os.path.join(TRAJ_DIR, TRAJ_PATTERN)))
+    member_to_paths = discover_trajectory_stores(TRAJ_DIR, TRAJ_PATTERN)
+    unique_members = sorted(member_to_paths.keys())
 
-    if len(files) == 0:
+    if len(unique_members) == 0:
         if rank == 0:
             print(f"No trajectory files found in {TRAJ_DIR} "
                   f"matching {TRAJ_PATTERN}", flush=True)
         return
 
+    all_files = [f for paths in member_to_paths.values() for f in paths]
+
     if rank == 0:
-        print(f"\nFound {len(files)} member trajectory stores", flush=True)
+        print(f"\nFound {len(unique_members)} member(s) across {len(all_files)} store(s): "
+              f"{unique_members[0]}..{unique_members[-1]}", flush=True)
 
     # ------------------------------------------------------------
     # domain bounds (rank 0 computes, then broadcasts)
@@ -388,7 +443,7 @@ def main():
     if rank == 0:
         if None in (LON_MIN, LON_MAX, LAT_MIN, LAT_MAX):
             print("Auto-detecting domain bounds...", flush=True)
-            lon_min, lon_max, lat_min, lat_max = get_domain_bounds(files)
+            lon_min, lon_max, lat_min, lat_max = get_domain_bounds(all_files)
         else:
             lon_min, lon_max = LON_MIN, LON_MAX
             lat_min, lat_max = LAT_MIN, LAT_MAX
@@ -433,34 +488,52 @@ def main():
     # ------------------------------------------------------------
     # split members across ranks
     # ------------------------------------------------------------
-    local_files = files[rank::size]
-    print(f"[rank {rank:02d}] Members assigned: {len(local_files)}", flush=True)
+    local_members = unique_members[rank::size]
+    print(f"[rank {rank:02d}] Members assigned: {len(local_members)}", flush=True)
 
     member_names = []
     member_dense = []
     long_dfs = []
     member_connectivity = []
 
-    for f in local_files:
-        member = os.path.basename(f).split('_')[-1].replace('.zarr', '')
-        print(f"[rank {rank}] Counting boxes for member {member}", flush=True)
+    for member in local_members:
+        member_files = member_to_paths[member]
+        print(f"[rank {rank}] Counting boxes for {member} ({len(member_files)} file(s))", flush=True)
 
-        dense_counts, long_df, connectivity = process_member(
-            f, lon_edges, lat_edges, member,
-            GROUP_BY_SPAWN, PARTICLES_PER_POINT,
-            GROUP_BY_TIME, TIME_BIN_DAYS,
-            compute_connectivity=COMPUTE_CONNECTIVITY,
-            site_x=site_x, site_y=site_y,
-            site_radius_km=site_radius_km,
-            lon_ref=lon_ref, lat_ref=lat_ref
-        )
+        dense_acc = np.zeros(nlon * nlat, dtype=np.int64)
+        long_df_list = []
+        conn_acc = np.zeros((n_sites, n_sites), dtype=np.int64) if COMPUTE_CONNECTIVITY else None
+
+        for f in member_files:
+            dense_counts, long_df, connectivity = process_member(
+                f, lon_edges, lat_edges, member,
+                GROUP_BY_SPAWN, PARTICLES_PER_POINT,
+                GROUP_BY_TIME, TIME_BIN_DAYS,
+                compute_connectivity=COMPUTE_CONNECTIVITY,
+                site_x=site_x, site_y=site_y,
+                site_radius_km=site_radius_km,
+                lon_ref=lon_ref, lat_ref=lat_ref
+            )
+            dense_acc += dense_counts
+            if long_df is not None:
+                long_df_list.append(long_df)
+            if connectivity is not None and conn_acc is not None:
+                conn_acc += connectivity
 
         member_names.append(member)
-        member_dense.append(dense_counts)
-        if long_df is not None:
-            long_dfs.append(long_df)
-        if connectivity is not None:
-            member_connectivity.append(connectivity)
+        member_dense.append(dense_acc)
+
+        if long_df_list:
+            if len(long_df_list) == 1:
+                combined_long = long_df_list[0]
+            else:
+                combined_long = pd.concat(long_df_list, ignore_index=True)
+                group_cols = [c for c in ['cell', 'spawn_id', 'time_bin', 'member'] if c in combined_long.columns]
+                combined_long = combined_long.groupby(group_cols)['n_particles'].sum().reset_index()
+            long_dfs.append(combined_long)
+
+        if conn_acc is not None:
+            member_connectivity.append(conn_acc)
 
     # ------------------------------------------------------------
     # gather results to rank 0

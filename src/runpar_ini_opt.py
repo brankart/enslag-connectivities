@@ -25,16 +25,18 @@ size = comm.Get_size()
 # USER PARAMETERS
 # ================================================================
 
-N_MEMBERS = 30 #30
-PARTICLES_PER_POINT = 4000 #1000
-GAUSSIAN_STD_DEG = 0.05  # standard deviation of the Gaussian cloud in degrees (lat/lon)
-DT = 900
-OUTPUT_DT = timedelta(days=1)
+from config import (
+    N_MEMBERS,
+    PARTICLES_PER_POINT,
+    GAUSSIAN_STD_DEG,
+    DT,
+    ENSEMBLE_DIR,
+    OUTPUT_DIR as BASE_OUTPUT_DIR,
+    SPOTS_FILE,
+)
 
-PATH_ABS = 'your_absolute_path_to_enslag_connectivities' 
-ENSEMBLE_DIR = 'your_path_to_ensemble_data'
-OUTPUT_DIR = os.path.join(PATH_ABS, "output/ini")
-SPOTS_FILE = os.path.join(PATH_ABS, "input/release_spots.txt")
+OUTPUT_DT = timedelta(days=1)
+OUTPUT_DIR = str(BASE_OUTPUT_DIR / "ini")
 FILE_PATTERN = "{:03d}swiose_avg.nc"
 
 

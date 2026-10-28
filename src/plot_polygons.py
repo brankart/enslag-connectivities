@@ -16,31 +16,41 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from shapely.geometry import box
 from shapely.ops import unary_union
+from config import (
+    INPUT_DIR,
+    OUTPUT_DIR,
+    FIGURES_DIR,
+    SPOTS_FILE,
+)
 
 
 # -----------------------------
 # Configuration
 # -----------------------------
 
-DATA_DIRS = [Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_0"),
-    	     Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_1"),
-             Path("../input/WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_2")]
+DATA_DIRS = [
+    INPUT_DIR / "WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_0",
+    INPUT_DIR / "WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_1",
+    INPUT_DIR / "WDPA_WDOECM_Mar2025_Public_AF_shp/WDPA_WDOECM_Mar2025_Public_AF_shp_2",
+]
 
-SHAPEFILES = [DATA_DIRS[0] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
-    	      DATA_DIRS[1] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
-    	      DATA_DIRS[2] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp"]
+SHAPEFILES = [
+    DATA_DIRS[0] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
+    DATA_DIRS[1] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
+    DATA_DIRS[2] / "WDPA_WDOECM_Mar2025_Public_AF_shp-polygons.shp",
+]
 
 TARGET_CRS = "EPSG:4326"
 
 INDIAN_OCEAN_BOUNDS = {"min_lon": 30.0,
-    		       "max_lon": 70.0,
-    		       "min_lat": -35.0,
-    		       "max_lat": 5.0}
+                       "max_lon": 70.0,
+                       "min_lat": -35.0,
+                       "max_lat": 5.0}
 
-SAVEDIR = "../output"
+SAVEDIR = OUTPUT_DIR
 file_MPA_SWIO = "MPA_SWIO_mask.nc"
 
-SPOTS_FILE = "../input/release_spots.txt"
+SPOTS_FILE = Path(SPOTS_FILE)
 
 
 # -----------------------------
@@ -187,10 +197,10 @@ def plot_marine_polygons(polygons: gpd.GeoDataFrame,
     ax.set_title("Marine Protected Areas (MPAs) in the SWIO", fontsize=14)
     plt.tight_layout()
 
-    savepath = '../figures/map_MPA_SWIO.png'
+    savepath = FIGURES_DIR / "map_MPA_SWIO.png"
     if save:
-        os.makedirs(os.path.dirname(savepath), exist_ok=True)
-        if os.path.exists(savepath):
+        os.makedirs(savepath.parent, exist_ok=True)
+        if savepath.exists():
             print(f' \n!!WARNING: {savepath} already exists. Overriding...')
         print(f"Saving figure to {savepath}...")
         plt.savefig(savepath, dpi=300)
@@ -236,16 +246,14 @@ def polygons_to_xarray(polygons: gpd.GeoDataFrame,
 
 
 def save_polygons_to_nc(polygons_da: xr.DataArray,
-                        SAVEDIR,file) -> None:
+                        SAVEDIR, file) -> None:
 
-    try:
-        os.makedirs(SAVEDIR)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
+    savedir_path = Path(SAVEDIR)
+    os.makedirs(savedir_path, exist_ok=True)
 
-    print(f'\nSaving SWIO marine polygons to {file}...')
-    polygons_da.to_netcdf(os.path.join(SAVEDIR,file))
+    out_file = savedir_path / file
+    print(f'\nSaving SWIO marine polygons to {out_file}...')
+    polygons_da.to_netcdf(out_file)
     print('Done')
 
 
@@ -259,7 +267,7 @@ def parse_args():
     )
     parser.add_argument(
         "--save", action="store_true",
-        help="Save the figure as .png under ../figures instead of displaying it."
+        help="Save the figure as .png under figures/ instead of displaying it."
     )
     return parser.parse_args()
 
