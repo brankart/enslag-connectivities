@@ -72,7 +72,7 @@ def DeleteParticle(particle, fieldset, time):
 # ================================================================
  
 def load_release_points():
-    data = np.loadtxt(SPOTS_FILE, comments='#')
+    data = np.loadtxt(SPOTS_FILE, comments='#', ndmin=2)
     lon = data[:, 0]
     lat = data[:, 1]
     if data.shape[1] >= 3:
