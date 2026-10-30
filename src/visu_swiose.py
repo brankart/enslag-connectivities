@@ -26,6 +26,7 @@ from config import (
     ENSEMBLE_DIR,
     OUTPUT_DIR,
     FIGURES_DIR,
+    EXPT,
     N_MEMBERS,
 )
 
@@ -49,7 +50,7 @@ plot_dt_comparison = False
 plot_particles = (plot_spaghetti or plot_colortime or map_colortime or map_colortime_bathy
                   or plot_colortraj or map_colortraj or map_colortraj_bathy)
 nens = 30
-ens_id = "ini" # "ini" or "GLS" or "CD"
+ens_id = EXPT
 year = "2019"
 zone = "Glorioso"
 ensemble = range(1,nens+1)
