@@ -60,6 +60,9 @@ SPOTS_FILE = Path(os.environ.get("ENSLAG_SPOTS_FILE", DEFAULT_SPOTS_FILE))
 # SHARED EXPERIMENT & SIMULATION PARAMETERS
 # ================================================================
 
+# Name of the experiment
+EXPT = int(os.environ.get("ENSLAG_EXPT", "expt"))
+
 # Ensemble size
 N_MEMBERS = int(os.environ.get("ENSLAG_N_MEMBERS", 30))
 

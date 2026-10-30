@@ -26,6 +26,7 @@ size = comm.Get_size()
 # ================================================================
 
 from config import (
+    EXPT,
     N_MEMBERS,
     PARTICLES_PER_POINT,
     GAUSSIAN_STD_DEG,
@@ -36,7 +37,7 @@ from config import (
 )
 
 OUTPUT_DT = timedelta(days=1)
-OUTPUT_DIR = str(BASE_OUTPUT_DIR / "ini")
+OUTPUT_DIR = str(BASE_OUTPUT_DIR / EXPT)
 FILE_PATTERN = "{:03d}swiose_avg.nc"
 
 
