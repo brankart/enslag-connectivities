@@ -21,9 +21,6 @@ from typing import Union
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # Core project subdirectories
-INPUT_DIR = PROJECT_ROOT / "input"
-OUTPUT_DIR = PROJECT_ROOT / "output"
-FIGURES_DIR = PROJECT_ROOT / "figures"
 SRC_DIR = PROJECT_ROOT / "src"
 
 # Ensure src/ is in sys.path for direct imports
@@ -35,9 +32,21 @@ if str(SRC_DIR) not in sys.path:
 # DATA PATHS & ENVIRONMENT VARIABLE OVERRIDES
 # ================================================================
 
+# Path to input directory
+DEFAULT_INPUT_DIR = PROJECT_ROOT / "input"
+INPUT_DIR = Path(os.environ.get("ENSLAG_INPUT_DIR", DEFAULT_INPUT_DIR))
+
+# Path to output directory
+DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "output"
+OUTPUT_DIR = Path(os.environ.get("ENSLAG_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
+
+# Path to figure directory
+DEFAULT_FIGURE_DIR = PROJECT_ROOT / "figures"
+FIGURE_DIR = Path(os.environ.get("ENSLAG_FIGURE_DIR", DEFAULT_FIGURE_DIR))
+
 # Path to CROCO ensemble netCDF output directory
 # Override with environment variable ENSLAG_DATA_DIR or ENSEMBLE_DIR
-DEFAULT_ENSEMBLE_DIR = "your_path_to_ensemble_data"
+DEFAULT_ENSEMBLE_DIR = PROJECT_ROOT / "input"
 ENSEMBLE_DIR = Path(
     os.environ.get("ENSLAG_DATA_DIR", os.environ.get("ENSEMBLE_DIR", DEFAULT_ENSEMBLE_DIR))
 )
