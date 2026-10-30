@@ -41,8 +41,8 @@ DEFAULT_OUTPUT_DIR = PROJECT_ROOT / "output"
 OUTPUT_DIR = Path(os.environ.get("ENSLAG_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
 
 # Path to figure directory
-DEFAULT_FIGURE_DIR = PROJECT_ROOT / "figures"
-FIGURE_DIR = Path(os.environ.get("ENSLAG_FIGURE_DIR", DEFAULT_FIGURE_DIR))
+DEFAULT_FIGURES_DIR = PROJECT_ROOT / "figures"
+FIGURES_DIR = Path(os.environ.get("ENSLAG_FIGURES_DIR", DEFAULT_FIGURES_DIR))
 
 # Path to CROCO ensemble netCDF output directory
 # Override with environment variable ENSLAG_DATA_DIR or ENSEMBLE_DIR
@@ -119,11 +119,11 @@ def extract_member_id(path: Union[str, Path]) -> str:
     return format_member_id(Path(path).name.replace(".zarr", ""))
 
 
-def get_traj_dir(ens_id: str = "ini") -> Path:
+def get_traj_dir(ens_id: str = EXPT) -> Path:
     """Return the output directory path for a given experiment ID."""
     return OUTPUT_DIR / ens_id
 
 
-def get_figures_dir(ens_id: str = "ini") -> Path:
+def get_figures_dir(ens_id: str = EXPT) -> Path:
     """Return the figures directory path for a given experiment ID."""
     return FIGURES_DIR / ens_id
