@@ -179,8 +179,29 @@ def discover_member_stores(traj_dir, member_filter=None):
 # DATA LOADING
 # ================================================================
 
+def _pad_to_length(arr, n_times):
+    """Pad a (n_particles, t) array with NaN along axis 1 to width n_times.
+
+    Parcels writes shorter time series for proc files whose particles were
+    all deleted before the end of the run, so partitions may have different
+    numbers of timesteps.  Padding with NaN makes them concatenatable and
+    causes deleted-particle positions to be treated as missing in the
+    animation (they are already filtered out by the finite-value mask).
+    """
+    if arr.shape[1] == n_times:
+        return arr
+    pad_width = n_times - arr.shape[1]
+    padding = np.full((arr.shape[0], pad_width), np.nan, dtype=np.float64)
+    return np.concatenate([arr.astype(np.float64), padding], axis=1)
+
+
 def load_member_trajectories(store_paths):
     """Load and concatenate lon/lat arrays from a list of zarr stores.
+
+    Different proc partitions may have different numbers of timesteps when
+    some particles are deleted before the end of the run.  All arrays are
+    padded with NaN to the maximum length before concatenation so that the
+    resulting arrays have a uniform shape (n_particles, n_times_max).
 
     Parameters
     ----------
@@ -192,29 +213,38 @@ def load_member_trajectories(store_paths):
     lon : ndarray, shape (n_particles, n_times)
     lat : ndarray, shape (n_particles, n_times)
     times : ndarray of datetime64, shape (n_times,)
-        Common time axis (taken from the first store; assumed identical
-        across partitions).
+        Time axis taken from the partition with the most timesteps.
     """
 
     lons, lats = [], []
     times = None
+    n_times_max = 0
 
     for path in store_paths:
         with xr.open_zarr(path) as ds:
-            lons.append(ds["lon"].values)
-            lats.append(ds["lat"].values)
-            if times is None:
-                # obs dimension holds the time coordinate
+            lon_chunk = ds["lon"].values
+            lat_chunk = ds["lat"].values
+            lons.append(lon_chunk)
+            lats.append(lat_chunk)
+
+            n_t = lon_chunk.shape[1]
+
+            # Keep the longest time axis as the reference
+            if n_t > n_times_max:
+                n_times_max = n_t
                 if "time" in ds:
-                    t = ds["time"].values          # (n_particles, n_times)
-                    # Use the first particle's time series as the common axis
+                    t = ds["time"].values      # (n_particles, n_times)
                     times = t[0]
                 elif "obs" in ds.dims:
                     times = ds["obs"].values
                 else:
-                    times = np.arange(ds["lon"].shape[1])
+                    times = np.arange(n_t)
 
-    lon = np.concatenate(lons, axis=0)   # (total_particles, n_times)
+    # Pad all partitions to the common length, then concatenate
+    lons = [_pad_to_length(a, n_times_max) for a in lons]
+    lats = [_pad_to_length(a, n_times_max) for a in lats]
+
+    lon = np.concatenate(lons, axis=0)   # (total_particles, n_times_max)
     lat = np.concatenate(lats, axis=0)
 
     return lon, lat, times
