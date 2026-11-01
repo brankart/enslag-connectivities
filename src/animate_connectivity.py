@@ -35,6 +35,9 @@
 #                           [default: plasma]
 #   --output-dir DIR        Directory for output files.
 #                           [default: same as --traj-dir]
+#   --format {gif,mp4}      Output file format: 'gif' (Pillow writer,
+#                           default) or 'mp4' (FFMpeg; must be installed).
+#                           [default: gif]
 #   --fps N                 Frames per second.  [default: 4]
 #   --dpi N                 Figure resolution in DPI.  [default: 150]
 #
@@ -533,6 +536,14 @@ def parse_args():
         ),
     )
     parser.add_argument(
+        "--format",
+        choices=["gif", "mp4"], default="gif",
+        help=(
+            "Output file format: 'gif' (Pillow writer, default) or "
+            "'mp4' (FFMpeg writer; FFmpeg must be installed)."
+        ),
+    )
+    parser.add_argument(
         "--fps",
         type=int, default=DEFAULT_FPS, metavar="N",
         help="Frames per second.",
@@ -619,11 +630,10 @@ def main():
         )
 
         # 2f. Save
-        out_path = os.path.join(output_dir, f"connectivity_{mid}.gif")
-        ext = os.path.splitext(out_path)[1].lower()
+        out_path = os.path.join(output_dir, f"connectivity_{mid}.{args.format}")
         writer = (
             animation.FFMpegWriter(fps=args.fps, bitrate=1800)
-            if ext == ".mp4"
+            if args.format == "mp4"
             else animation.PillowWriter(fps=args.fps)
         )
         print(f"  Saving → {out_path}", flush=True)
