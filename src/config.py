@@ -75,6 +75,9 @@ GAUSSIAN_STD_DEG = float(os.environ.get("ENSLAG_GAUSSIAN_STD_DEG", 0.05))
 # Simulation advection timestep in seconds
 DT = int(os.environ.get("ENSLAG_DT", 900))
 
+# Simulation advection timestep in seconds
+OUTPUT_DT = int(os.environ.get("ENSLAG_OUTPUT_DT", 86400))
+
 
 # ================================================================
 # CONNECTIVITY & DISCRETIZATION PARAMETERS

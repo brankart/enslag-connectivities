@@ -35,11 +35,9 @@ from config import (
 # GLOBAL SETTINGS
 # ========================================================
 
-force_resave = False # set to True to save figure(s)
+force_resave = True # set to True to save figure(s)
 map_bathy = False
-map_ssh = False
-map_ssh_multi = False
-plot_spaghetti = False
+plot_spaghetti = True
 plot_colortime = False
 map_colortime = False
 map_colortime_bathy = False
@@ -49,69 +47,39 @@ map_colortraj_bathy = False
 plot_dt_comparison = False
 plot_particles = (plot_spaghetti or plot_colortime or map_colortime or map_colortime_bathy
                   or plot_colortraj or map_colortraj or map_colortraj_bathy)
-nens = 30
-ens_id = EXPT
-year = "2019"
-zone = "Glorioso"
+nens = 3
 ensemble = range(1,nens+1)
-sample = [1,2,3,4,5,6] # members from which to plot ssh
+#sample = [1,2,3,4,5,6] # members from which to plot
+#sample = [1,2,3] # members from which to plot
+sample = [2] # members from which to plot
 npart = 1
 dt = 300
 dtL = [300,600,1200,1800,3600]
 dpt = -10
-sigma = 0.1
-radius = 0  # km
-if zone == "Glorioso":
-    lon_ref, lat_ref = 46, -11
-elif zone == "Tromelin":
-    lon_ref, lat_ref = 54.5, -16
-elif zone == "Mayotte":
-    lon_ref, lat_ref = 45, -13
-elif zone == "Madagascar":
-    lon_ref, lat_ref = 50, -21
-elif zone == "Southern":
-    lon_ref, lat_ref = 50, -30
-
 
 # ========================================================
 # ACCESS PATHS
 # ========================================================
 
-swio_dataset_folder = os.environ.get(
-    "ENSLAG_DATA_DIR",
-    str(ENSEMBLE_DIR) if str(ENSEMBLE_DIR) != "your_path_to_ensemble_data" else f"/lus/store/CT1/c1601279/lweiss/run_croco/SWIOSE_dev/run_swio2_stoens30_2019_{ens_id}"
-)
-fname = [f"{idx:03d}swiose_avg.nc" for idx in sample]
-file = [os.path.join(swio_dataset_folder, f) for f in fname]
+file_bathy_bin = str(OUTPUT_DIR / EXPT / "bathy.zarr")
+file_bathy_fig = str(FIGURES_DIR / EXPT / "bathy.png")
 
-file_bathy_bin = str(OUTPUT_DIR / ens_id / "bathy.zarr")
-file_bathy_fig = str(FIGURES_DIR / ens_id / "bathy.png")
-file_ssh_bin = [str(OUTPUT_DIR / ens_id / "modelvars/ssh" / f"ssh_memb{idx:03d}_{year}_{ens_id}.zarr") for idx in sample]
-file_ssh_fig = [str(FIGURES_DIR / ens_id / "modelvars/ssh" / f"ssh_memb{idx:03d}_{year}_{ens_id}.png") for idx in sample]
-file_ssh_multi_fig = str(FIGURES_DIR / ens_id / "modelvars/ssh" / f"ssh_multi_{year}_{ens_id}.png")
+dir_bin = str(OUTPUT_DIR / EXPT)
+dir_fig = str(FIGURES_DIR / EXPT)
 
-dir_bin = str(OUTPUT_DIR / ens_id / zone / f"z{abs(dpt)}" / f"{npart}part")
-dir_fig = str(FIGURES_DIR / ens_id / zone / f"z{abs(dpt)}" / f"{npart}part")
+file_dt_bin = [f"traj_member_001.zarr/proc00.zarr" for idx in dtL]
+file_dt_fig = f"traj_member_001.png"
 
-file_ensmean_bin = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.zarr"
-file_ensmean_fig = f"traj_{npart}part_ENSMEAN_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.png"
+file_spag_fig = f"traj_FULLENS_spaghetti.png"
 
-file_dt_bin = [f"traj_{npart}part_memb001_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{idx}.zarr" for idx in dtL]
-file_dt_fig = f"traj_{npart}part_memb001_{zone}_z{abs(dpt)}_{year}_{ens_id}_dtmulti.png"
+file_colortime_fig = f"traj_FULLENS_colortime.png"
+file_colortime_map = f"traj_FULLENS_colortime_map.png"
+file_colortime_map_bathy = f"traj_FULLENS_colortime_map_bathy.png"
+file_colortime_map_bathy_sample = f"traj_FULLENS_colortime_map_bathy_6memb.png"
 
-file_spag_fig = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_spaghetti.png"
-
-file_colortime_fig = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortime.png"
-file_colortime_map = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortime_map.png"
-file_colortime_map_bathy = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortime_map_bathy.png"
-file_colortime_map_bathy_sample = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortime_map_bathy_6memb.png"
-
-file_colortraj_fig = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortraj.png"
-file_colortraj_map = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortraj_map.png"
-file_colortraj_map_bathy = f"traj_{npart}part_FULLENS_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}_colortraj_map_bathy.png"
-
-path_ensmean_bin = os.path.join(dir_bin,file_ensmean_bin)
-path_ensmean_fig = os.path.join(dir_fig,file_ensmean_fig)
+file_colortraj_fig = f"traj_FULLENS_colortraj.png"
+file_colortraj_map = f"traj_FULLENS_colortraj_map.png"
+file_colortraj_map_bathy = f"traj_FULLENS_colortraj_map_bathy.png"
 
 path_dt_bin = [os.path.join(dir_bin,t) for t in file_dt_bin]
 path_dt_fig = os.path.join(dir_fig,file_dt_fig)
@@ -127,8 +95,8 @@ path_colortraj_fig = os.path.join(dir_fig,file_colortraj_fig)
 path_colortraj_map = os.path.join(dir_fig,file_colortraj_map)
 path_colortraj_map_bathy = os.path.join(dir_fig,file_colortraj_map_bathy)
 
-file_bin = [f"traj_{npart}part_memb{idx:03d}_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.zarr" for idx in sample]
-file_fig = [f"traj_{npart}part_memb{idx:03d}_{zone}_z{abs(dpt)}_{year}_{ens_id}_dt{dt}.png" for idx in sample]
+file_bin = [f"traj_member_{idx:03d}.zarr/proc{idx-1:02d}.zarr" for idx in sample]
+file_fig = [f"traj_member_{idx:03d}.png" for idx in sample]
 path_bin = [os.path.join(dir_bin,f) for f in file_bin]
 path_fig = [os.path.join(dir_fig,f) for f in file_fig]
 
@@ -139,19 +107,12 @@ def main():
         if e.errno != errno.EEXIST:
             raise
 
-    try:
-        os.makedirs(FIGURES_DIR / ens_id / "modelvars/ssh", exist_ok=True)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-
     # ========================================================
     # LOADING DATA (OPTIONAL : LAND MASK)
     # ========================================================
 
     lon_reg, lat_reg, h_reg = None, None, None
-    if map_bathy or map_colortime_bathy or map_ssh or map_ssh_multi:
+    if map_bathy or map_colortime_bathy:
         if os.path.exists(file_bathy_bin):
             with xr.open_zarr(file_bathy_bin) as bathy_swiose:
                 mask = bathy_swiose['mask_rho']  # .values
@@ -164,16 +125,6 @@ def main():
         else:
             print(f" *** Warning: {file_bathy_bin} not found. ***")
 
-    if map_ssh or map_ssh_multi:
-        ssh_ini_reg = []    
-        for n in file_ssh_bin:
-            if os.path.exists(n):
-                ssh_n = xr.open_zarr(n)['zeta'].values[0, :, :]
-                lon_reg, lat_reg, ssh_n_reg = tl.regrid_curv2reg(lon, lat, ssh_n)
-                ssh_ini_reg.append(ssh_n_reg)
-            else:
-                print(f" *** Warning: {n} not found. ***")
-
     if plot_particles:
         data_xarray = [xr.open_zarr(path_bin[idx]) for idx in range(len(sample))]
         x = [data_xarray[idx]["lon"].values for idx in range(len(data_xarray))]
@@ -181,7 +132,6 @@ def main():
         z = [data_xarray[idx]["z"].values for idx in range(len(data_xarray))]  # depth of particles
         x0 = x[0][:, 0]  # first indices of each trajectory
         y0 = y[0][:, 0]
-
 
     # ========================================================
     # FIGURE PRODUCTION
@@ -191,17 +141,6 @@ def main():
         tl.map_bathy(lon_reg, lat_reg, h_reg, savepath=file_bathy_fig)
     elif map_bathy:
         tl.map_bathy(lon_reg, lat_reg, h_reg)
-
-    if map_ssh and force_resave:
-        tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg, savepath=file_ssh_fig)
-    elif map_ssh:
-        tl.map_ssh(lon_reg, lat_reg, ssh_ini_reg)
-
-    if map_ssh_multi and force_resave:
-        tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6], savepath=file_ssh_multi_fig)
-    elif map_ssh_multi:
-        tl.map_ssh_multi(lon_reg, lat_reg, ssh_ini_reg[:6])
-
 
     if plot_spaghetti and force_resave:
         tl.spaghetti(x, y, x0, y0, npart, ensemble, savepath=path_spag_fig)

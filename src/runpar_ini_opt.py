@@ -4,12 +4,11 @@
 # ================================================================
 
 import os
+import sys
 import numpy as np
 import xarray as xr
-from datetime import timedelta
 from mpi4py import MPI
 import parcels
-# import tools as tl
 
 
 # ================================================================
@@ -31,14 +30,41 @@ from config import (
     PARTICLES_PER_POINT,
     GAUSSIAN_STD_DEG,
     DT,
+    OUTPUT_DT,
     ENSEMBLE_DIR,
     OUTPUT_DIR as BASE_OUTPUT_DIR,
     SPOTS_FILE,
 )
 
-OUTPUT_DT = timedelta(days=1)
 OUTPUT_DIR = str(BASE_OUTPUT_DIR / EXPT)
 FILE_PATTERN = "{:03d}swiose_avg.nc"
+
+
+# ================================================================
+# VALIDATE MPI / ENSEMBLE CONFIGURATION
+# ================================================================
+
+if size % N_MEMBERS != 0:
+    if rank == 0:
+        print(
+            f"[ERROR] Number of MPI ranks ({size}) must be a multiple of "
+            f"N_MEMBERS ({N_MEMBERS}). Aborting.",
+            flush=True,
+        )
+    comm.Barrier()
+    sys.exit(1)
+
+# Number of cores working in parallel on each member
+CORES_PER_MEMBER = size // N_MEMBERS
+
+# Each rank is assigned to exactly one member (1-indexed)
+member = rank // CORES_PER_MEMBER + 1
+
+# Index of this rank within its member group (0-indexed: 0 … CORES_PER_MEMBER-1)
+local_rank = rank % CORES_PER_MEMBER
+
+# Initialization of global variable
+n_particles_per_member = PARTICLES_PER_POINT
 
 
 # ================================================================
@@ -62,16 +88,16 @@ dimensions = {"U": {"lon": lon_rho, "lat": lat_rho, "depth": "s_w", "time": "tim
 # ================================================================
 # KERNELS
 # ================================================================
- 
+
 def DeleteParticle(particle, fieldset, time):
     if particle.state >= 50:
         particle.delete()
- 
- 
+
+
 # ================================================================
 # LOAD RELEASE POINTS
 # ================================================================
- 
+
 def load_release_points():
     data = np.loadtxt(SPOTS_FILE, comments='#', ndmin=2)
     lon = data[:, 0]
@@ -80,20 +106,31 @@ def load_release_points():
         depth = data[:, 2]
     else:
         depth = np.zeros_like(lon)
- 
+
     return lon, lat, depth
- 
- 
+
+
 # ================================================================
 # GENERATE PARTICLE CLOUD
 # ================================================================
- 
-def create_particle_cloud(lon, lat, depth):
+
+def create_particle_cloud(lon, lat, depth, rng):
     """
     Generate a particle cloud around each release point.
+
+    Parameters
+    ----------
+    lon, lat, depth : array-like
+        Release point coordinates.
+    rng : numpy.random.Generator
+        Random number generator with a rank-specific seed so that each
+        core draws a distinct random sample.
+
     If PARTICLES_PER_POINT > 1: 2D Gaussian distribution (lon, lat)
-    centred on the release point, with standard deviation GAUSSIAN_STD_DEG in degrees.
-    If PARTICLES_PER_POINT == 1: a single particle placed exactly on the release point.
+    centred on the release point, with standard deviation GAUSSIAN_STD_DEG
+    in degrees.
+    If PARTICLES_PER_POINT == 1: a single particle placed exactly on the
+    release point.
     """
 
     lon_list = []
@@ -101,11 +138,15 @@ def create_particle_cloud(lon, lat, depth):
     depth_list = []
 
     for lo, la, de in zip(lon, lat, depth):
+
+        lo_std = GAUSSIAN_STD_DEG * np.cos(np.deg2rad(la))
+        la_std = GAUSSIAN_STD_DEG
+
         if PARTICLES_PER_POINT > 1:
-            lo_cloud, la_cloud = np.random.multivariate_normal(
+            lo_cloud, la_cloud = rng.multivariate_normal(
                 mean=[lo, la],
-                cov=[[GAUSSIAN_STD_DEG**2, 0],
-                     [0,                   GAUSSIAN_STD_DEG**2]],
+                cov=[[lo_std**2, 0],
+                     [0,         la_std**2]],
                 size=PARTICLES_PER_POINT
             ).T
         else:
@@ -121,110 +162,180 @@ def create_particle_cloud(lon, lat, depth):
     depth_all = np.concatenate(depth_list)
 
     return lon_all, lat_all, depth_all
- 
- 
+
+
 # ================================================================
 # CREATE FIELDSET
 # ================================================================
- 
+
 def create_fieldset(file):
- 
+
     with xr.open_dataset(file) as ds:
         hc_val = ds.hc.values
         timespan = len(ds.time)
- 
+
     fieldset = parcels.FieldSet.from_croco(
         file, variables, dimensions,
         hc=hc_val,
         allow_time_extrapolation=True,
         deferred_load=True
     )
- 
+
     return fieldset, timespan
- 
- 
+
+
 # ================================================================
-# RUN ONE ENSEMBLE MEMBER
+# RUN THIS RANK'S PARTICLE SUBSET FOR ONE ENSEMBLE MEMBER
 # ================================================================
- 
-def run_member(member, lon, lat, depth):
- 
+
+def ensemble_partition(coords, mpi_size=1):
+
+    nproc_per_member = mpi_size // N_MEMBERS
+
+    if mpi_size % N_MEMBERS != 0:
+        raise ValueError("MPI size must be divisible by ensemble size")
+
+    if n_particles_per_member < nproc_per_member:
+        raise ValueError("Not enough particles per ensemble member")
+
+    particle_index = np.arange(len(coords))
+
+    member_index = particle_index // n_particles_per_member
+    local_index = particle_index % n_particles_per_member
+
+    # Assign particles only to processes belonging to their member
+    mpi_procs = (
+        member_index * nproc_per_member
+        + local_index % nproc_per_member
+    )
+
+    return mpi_procs
+
+def run_rank(member, local_rank, lon, lat, depth):
+    """
+    Advect the particle subset assigned to this MPI rank.
+
+    Each rank works on exactly one ensemble member and one
+    velocity file.
+
+    Output files are named:
+        traj_member_{member:03d}.zarr
+    """
+
     fname = FILE_PATTERN.format(member)
     file = os.path.join(ENSEMBLE_DIR, fname)
- 
+
     if not os.path.exists(file):
         print(f"[rank {rank}] Missing {file}", flush=True)
         return
- 
-    print(f"[rank {rank}] Running member {member}", flush=True)
- 
+
+    print(
+        f"[rank {rank:02d}] member={member:03d} local_rank={local_rank:02d} ",
+        flush=True,
+    )
+
     fieldset, timespan = create_fieldset(file)
- 
+
+    n_particles_per_member = len(lon)
+
+    lon_all = np.tile(lon, N_MEMBERS)
+    lat_all = np.tile(lat, N_MEMBERS)
+    depth_all = np.tile(depth, N_MEMBERS)
+
     pset = parcels.ParticleSet(
         fieldset=fieldset,
         pclass=parcels.JITParticle,
-        lon=lon, lat=lat, depth=depth
+        lon=lon_all, lat=lat_all, depth=depth_all,
+        partition_function=ensemble_partition
     )
- 
+
+    # VERIFY DISTRIBUTION
+    print(
+        f"Global rank: {local_rank}, "
+        f"Member: {member}, "
+        f"Local particles: {len(pset)}"
+    )
+
+    comm.Barrier()
+
+
     os.makedirs(OUTPUT_DIR, exist_ok=True)
- 
-    output_name = os.path.join(OUTPUT_DIR, f"traj_member_{member:03d}.zarr")
+
+    output_name = os.path.join(
+        OUTPUT_DIR,
+        f"traj_member_{member:03d}.zarr"
+    )
     output_file = pset.ParticleFile(
         name=output_name,
         outputdt=OUTPUT_DT,
         chunks=(10000, 1)
     )
- 
+
     pset.execute(
         [parcels.AdvectionRK4_3D, DeleteParticle],
         runtime=86400 * timespan,
         dt=DT,
         output_file=output_file
     )
- 
+
     del fieldset
     del pset
- 
-    print(f"[rank {rank}] Finished member {member}", flush=True)
- 
- 
+
+    print(
+        f"[rank {rank:02d}] Finished member={member:03d} "
+        f"part={local_rank:02d}",
+        flush=True,
+    )
+
+
 # ================================================================
 # MAIN PROGRAM
 # ================================================================
- 
+
 def main():
- 
+    global n_particles_per_member
+
     if rank == 0:
-        print("\nLoading release points", flush=True)
- 
+        print("\nMPI parallelization: multiple cores per member", flush=True)
+        print(f"  MPI ranks:          {size}", flush=True)
+        print(f"  Ensemble members:   {N_MEMBERS}", flush=True)
+        print(f"  Cores per member:   {CORES_PER_MEMBER}", flush=True)
+
+    # Load release points on every rank (small file, no broadcast needed)
     lon, lat, depth = load_release_points()
-    lonp, latp, depthp = create_particle_cloud(lon, lat, depth)
- 
-    if rank == 0: # for debug
-        print(f"Release points:            {len(lon)}")
-        print(f"Particles per point:       {PARTICLES_PER_POINT}")
-        print(f"Total particles per member:{len(lonp)}")
-        print(f"MPI ranks:                 {size}")
-        print(f"Members per rank:          {N_MEMBERS // size} "
-              f"(+{N_MEMBERS % size} ranks carry 1 extra)", flush=True)
- 
-    members = list(range(1, N_MEMBERS + 1))
-    local_members = members[rank::size]
- 
-    print(f"[rank {rank:02d}] Members assigned: {local_members}", flush=True)
- 
-    for member in local_members:
-        run_member(member, lonp, latp, depthp)
- 
+
+    # Each rank uses a unique seed so that its random particle cloud
+    # is statistically independent from those of sibling ranks.
+    # Seed = rank ensures reproducibility across re-runs.
+    #rng = np.random.default_rng(seed=rank)
+    # Same cloud for all members
+    rng = np.random.default_rng(seed=42)
+
+    lon_p, lat_p, depth_p = create_particle_cloud(lon, lat, depth, rng)
+    n_particles_per_member = len(lon_p)
+
+    if rank == 0:
+        print(f"\nRelease points:              {len(lon)}", flush=True)
+        print(f"Particles per point:         {PARTICLES_PER_POINT}", flush=True)
+        print(f"Total particles per member:  {len(lon_p)}", flush=True)
+
+    print(
+        f"[rank {rank:02d}] assigned member={member:03d} "
+        f"local_rank={local_rank:02d}",
+        flush=True,
+    )
+
+    run_rank(member, local_rank, lon_p, lat_p, depth_p)
+
     comm.Barrier()
- 
+
     if rank == 0:
         print("\nAll simulations completed.", flush=True)
- 
- 
+
+
 # ================================================================
 # ENTRY POINT
 # ================================================================
- 
+
 if __name__ == "__main__":
     main()
