@@ -9,7 +9,14 @@ import numpy as np
 import xarray as xr
 from mpi4py import MPI
 import parcels
+import warnings
 
+# Masquer spécifiquement le warning 'where' de NumPy/Parcels
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*'where' used without 'out'.*"
+)
 
 # ================================================================
 # MPI SETUP

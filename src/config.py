@@ -51,6 +51,10 @@ ENSEMBLE_DIR = Path(
     os.environ.get("ENSLAG_DATA_DIR", os.environ.get("ENSEMBLE_DIR", DEFAULT_ENSEMBLE_DIR))
 )
 
+# Grid file
+DEFAULT_GRID_FILE = "grid.nc"
+GRID_FILE = Path(os.environ.get("ENSLAG_GRID_FILE", DEFAULT_GRID_FILE))
+
 # Release spots definition file
 DEFAULT_SPOTS_FILE = INPUT_DIR / "release_spots.txt"
 SPOTS_FILE = Path(os.environ.get("ENSLAG_SPOTS_FILE", DEFAULT_SPOTS_FILE))
